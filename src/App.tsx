@@ -68,7 +68,6 @@ const PRESET_AVATARS = [
 
 type PageView = 'lobby' | 'rooms' | 'leaderboard';
 
-// ─── Offline Difficulty Modal ─────────────────────────────────────────────────
 // ─── Offline Two Player Rounds Modal ─────────────────────────────────────────
 function OfflineTwoPlayerModal({ onSelect, onClose }: {
   onSelect: (rounds: number) => void;
@@ -83,12 +82,12 @@ function OfflineTwoPlayerModal({ onSelect, onClose }: {
           <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto">
             <Users className="w-6 h-6 text-indigo-600" />
           </div>
-          <h2 className="font-black text-xl text-slate-900">2 Kişi Offline</h2>
-          <p className="text-slate-400 text-xs">Aynı cihazda sırayla oyna! İlk hamle: X</p>
+          <h2 className="font-black text-xl text-slate-900">2 Kisi Offline</h2>
+          <p className="text-slate-400 text-xs">Ayni cihazda sirayla oyna! Ilk hamle: X</p>
         </div>
 
         <div className="space-y-2">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Kaç Tur?</span>
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Kac Tur?</span>
           <div className="flex gap-2">
             {[1, 3, 5].map(n => (
               <button
@@ -108,13 +107,13 @@ function OfflineTwoPlayerModal({ onSelect, onClose }: {
 
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl transition-all text-sm cursor-pointer">
-            İptal
+            Iptal
           </button>
           <button
             onClick={() => onSelect(selectedRounds)}
             className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold py-3 rounded-2xl shadow-lg shadow-indigo-200 transition-all text-sm cursor-pointer flex items-center justify-center gap-2"
           >
-            <Users className="w-4 h-4" /> Başla!
+            <Users className="w-4 h-4" /> Basla!
           </button>
         </div>
       </div>
@@ -122,6 +121,7 @@ function OfflineTwoPlayerModal({ onSelect, onClose }: {
   );
 }
 
+// ─── Offline Difficulty Modal ─────────────────────────────────────────────────
 function OfflineDifficultyModal({ onSelect, onClose }: {
   onSelect: (difficulty: AIDifficulty, rounds: number) => void;
   onClose: () => void;
@@ -132,7 +132,7 @@ function OfflineDifficultyModal({ onSelect, onClose }: {
   const diffOptions: { key: AIDifficulty; label: string; desc: string; emoji: string; color: string }[] = [
     { key: 'easy',   label: 'Kolay',  desc: 'AI bazen hata yapar',      emoji: '😊', color: 'border-emerald-400 bg-emerald-50 text-emerald-700' },
     { key: 'normal', label: 'Normal', desc: 'Dengeli bir rakip',         emoji: '🤔', color: 'border-amber-400 bg-amber-50 text-amber-700' },
-    { key: 'hard',   label: 'Zor',    desc: 'Mükemmel AI — yenilmez!',  emoji: '😈', color: 'border-rose-400 bg-rose-50 text-rose-700' },
+    { key: 'hard',   label: 'Zor',    desc: 'Mukemmel AI - yenilmez!',  emoji: '😈', color: 'border-rose-400 bg-rose-50 text-rose-700' },
   ];
 
   return (
@@ -143,12 +143,11 @@ function OfflineDifficultyModal({ onSelect, onClose }: {
             <Bot className="w-6 h-6 text-indigo-600" />
           </div>
           <h2 className="font-black text-xl text-slate-900">AI ile Oyna</h2>
-          <p className="text-slate-400 text-xs">İnternet olmadan yapay zekaya karşı oyna!</p>
+          <p className="text-slate-400 text-xs">Internet olmadan yapay zekaya karsi oyna!</p>
         </div>
 
-        {/* Difficulty */}
         <div className="space-y-2">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Zorluk Seç</span>
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Zorluk Sec</span>
           <div className="space-y-2">
             {diffOptions.map(opt => (
               <button
@@ -171,9 +170,8 @@ function OfflineDifficultyModal({ onSelect, onClose }: {
           </div>
         </div>
 
-        {/* Rounds */}
         <div className="space-y-2">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Kaç Tur?</span>
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Kac Tur?</span>
           <div className="flex gap-2">
             {[1, 3, 5].map(n => (
               <button
@@ -193,13 +191,13 @@ function OfflineDifficultyModal({ onSelect, onClose }: {
 
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl transition-all text-sm cursor-pointer">
-            İptal
+            Iptal
           </button>
           <button
             onClick={() => onSelect(selectedDiff, selectedRounds)}
             className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold py-3 rounded-2xl shadow-lg shadow-indigo-200 transition-all text-sm cursor-pointer flex items-center justify-center gap-2"
           >
-            <Bot className="w-4 h-4" /> Başla!
+            <Bot className="w-4 h-4" /> Basla!
           </button>
         </div>
       </div>
@@ -295,14 +293,14 @@ export default function App() {
       const enemyPlayer = data.players.find((p) => p.userId !== user.userId);
       if (myPlayer && enemyPlayer) {
         setActiveGame({ roomCode: data.roomCode, me: myPlayer, opponent: enemyPlayer, roundsLimit: data.roundsTotal, gameBoard: data.gameBoard, turnUserId: data.turnUserId, status: data.status });
-        addToast('info', `Maç Başlıyor! ⚡`, `Rakibiniz: ${enemyPlayer.username} (${enemyPlayer.elo} ELO)`);
+        addToast('info', `Mac Basliyor! ⚡`, `Rakibiniz: ${enemyPlayer.username} (${enemyPlayer.elo} ELO)`);
       }
     });
 
     s.on('match-timeout', (data: { message: string }) => {
       cancelMatchmakingInterval();
       setMatchmakingActive(false);
-      addToast('warning', 'Rakip Bulunamadı', data.message);
+      addToast('warning', 'Rakip Bulunamadi', data.message);
     });
 
     setSocket(s);
@@ -335,10 +333,10 @@ export default function App() {
     try {
       const r = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: usernameInput, password: passwordInput, avatarUrl: avatarToSave }) });
       const body = await r.json();
-      if (!r.ok) throw new Error(body.error || 'Kayıt başarısız.');
-      setAuthSuccessMsg('Hesap oluşturuldu! Giriş yapılıyor...');
+      if (!r.ok) throw new Error(body.error || 'Kayit basarisiz.');
+      setAuthSuccessMsg('Hesap olusturuldu! Giris yapiliyor...');
       setTimeout(() => { localStorage.setItem('xox_jwt_token', body.token); setToken(body.token); setUser(body.user); resetAuthForm(); }, 1200);
-    } catch (err: any) { setAuthError(err.message || 'Bir hata oluştu.'); }
+    } catch (err: any) { setAuthError(err.message || 'Bir hata olustu.'); }
     finally { setAuthLoading(false); }
   };
 
@@ -347,10 +345,10 @@ export default function App() {
     try {
       const r = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: usernameInput, password: passwordInput }) });
       const body = await r.json();
-      if (!r.ok) throw new Error(body.error || 'Hatalı kullanıcı adı veya şifre.');
-      setAuthSuccessMsg('Giriş başarılı! Yönlendiriliyorsunuz...');
+      if (!r.ok) throw new Error(body.error || 'Hatali kullanici adi veya sifre.');
+      setAuthSuccessMsg('Giris basarili! Yonlendiriliyorsunuz...');
       setTimeout(() => { localStorage.setItem('xox_jwt_token', body.token); setToken(body.token); setUser(body.user); resetAuthForm(); }, 800);
-    } catch (err: any) { setAuthError(err.message || 'Giriş yapılamadı.'); }
+    } catch (err: any) { setAuthError(err.message || 'Giris yapilamadi.'); }
     finally { setAuthLoading(false); }
   };
 
@@ -364,9 +362,9 @@ export default function App() {
       localStorage.setItem('xox_jwt_token', body.token);
       setToken(body.token); setUser(body.user);
       setLeadRefresh((p) => p + 1);
-      addToast('success', 'Avatar güncellendi!');
+      addToast('success', 'Avatar guncellendi!');
       return { success: true };
-    } catch { return { success: false, error: 'Sunucuya bağlanılamadı.' }; }
+    } catch { return { success: false, error: 'Sunucuya baglanilamadi.' }; }
   };
 
   const handleStartMatchmaking = () => {
@@ -375,13 +373,13 @@ export default function App() {
     socket.emit('search-match', { rounds: searchRounds }, (res: { error?: string }) => {
       if (res?.error) { addToast('error', 'Hata', res.error); return; }
       setMatchmakingActive(true);
-      addToast('info', 'Rakip Aranıyor...', `${searchRounds} tur için sırada bekliyorsunuz`);
+      addToast('info', 'Rakip Araniyor...', `${searchRounds} tur icin sirada bekliyorsunuz`);
     });
   };
 
   const handleCancelMatchmaking = () => {
     if (!socket) return;
-    socket.emit('cancel-matchmaking', () => { setMatchmakingActive(false); addToast('info', 'Arama İptal Edildi'); });
+    socket.emit('cancel-matchmaking', () => { setMatchmakingActive(false); addToast('info', 'Arama Iptal Edildi'); });
   };
 
   const handleCreateCustomRoom = () => {
@@ -390,7 +388,7 @@ export default function App() {
     socket.emit('create-custom-room', { rounds: customRounds }, (res: { success: boolean; roomCode: string; rounds: number; error?: string }) => {
       if (res.error) { setCustomRoomError(res.error); return; }
       setPrivateRoomCode(res.roomCode);
-      addToast('success', 'Oda Oluşturuldu! 🎉', `Kod: ${res.roomCode} — Arkadaşına gönder!`);
+      addToast('success', 'Oda Olusturuldu! 🎉', `Kod: ${res.roomCode} — Arkadasina gonder!`);
     });
   };
 
@@ -429,7 +427,7 @@ export default function App() {
             </div>
             <div className="flex items-center gap-2">
               <span className="bg-slate-100 text-slate-600 text-[10px] font-black px-2 py-1 rounded-full border border-slate-200 flex items-center gap-1">
-                <WifiOff className="w-3 h-3" /> Offline 2 Kişi
+                <WifiOff className="w-3 h-3" /> Offline 2 Kisi
               </span>
             </div>
           </div>
@@ -503,7 +501,7 @@ export default function App() {
       <div className="min-h-screen bg-slate-50 antialiased font-sans flex flex-col">
         <ToastContainer toasts={toasts} onRemove={removeToast} />
 
-                {/* Offline Two Player Modal */}
+        {/* Offline Two Player Modal */}
         {offlineTwoPlayerModalOpen && (
           <OfflineTwoPlayerModal
             onSelect={(rounds) => {
@@ -545,7 +543,7 @@ export default function App() {
               {([
                 { key: 'lobby', label: 'Lobi', icon: <Zap className="w-3 h-3" /> },
                 { key: 'rooms', label: 'Odalar', icon: <DoorOpen className="w-3 h-3" /> },
-                { key: 'leaderboard', label: 'Sıralama', icon: <Trophy className="w-3 h-3" /> },
+                { key: 'leaderboard', label: 'Sirala', icon: <Trophy className="w-3 h-3" /> },
               ] as const).map(({ key, label, icon }) => (
                 <button
                   key={key}
@@ -570,7 +568,7 @@ export default function App() {
                   <span className="font-mono text-[9px] font-black text-indigo-500">⭐ {user.elo}</span>
                 </div>
               </div>
-              <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all cursor-pointer" title="Çıkış Yap">
+              <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all cursor-pointer" title="Cikis Yap">
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
@@ -582,14 +580,14 @@ export default function App() {
           <main className="max-w-4xl w-full mx-auto px-4 py-8 flex-1 animate-scaleUp">
             <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 rounded-3xl p-6 md:p-8 text-white mb-8 border border-slate-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div className="space-y-2 relative z-10">
-                <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-indigo-500/30">Liderlik Kürsüsü</span>
+                <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-indigo-500/30">Liderlik Kursusu</span>
                 <h2 className="text-2xl md:text-3xl font-black tracking-tight flex items-center gap-2">
-                  <Trophy className="w-7 h-7 text-amber-400" /> Şampiyonlar Ligi
+                  <Trophy className="w-7 h-7 text-amber-400" /> Sampiyonlar Ligi
                 </h2>
-                <p className="text-slate-300 text-xs font-medium">En yüksek ELO'ya sahip oyuncuların canlı sıralaması</p>
+                <p className="text-slate-300 text-xs font-medium">En yuksek ELOya sahip oyuncularin canli siralamasi</p>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-4 shrink-0 text-center relative z-10 min-w-40">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Sıralamandasın</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Siralamandasin</span>
                 <div className="font-mono text-xl font-black text-amber-400 mt-1">⭐ {user.elo} ELO</div>
                 <span className="text-[10px] text-slate-300 font-bold">Seri: {user.currentWinStreak} Galibiyet</span>
               </div>
@@ -605,13 +603,12 @@ export default function App() {
             {/* Hero */}
             <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 rounded-3xl p-6 md:p-8 text-white relative overflow-hidden border border-indigo-500/30 shadow-xl">
               <div className="relative z-10 space-y-2">
-                <span className="bg-white/15 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-white/20">Canlı Odalar</span>
+                <span className="bg-white/15 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-white/20">Canli Odalar</span>
                 <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
-                  <DoorOpen className="w-6 h-6" /> Açık Odalar
+                  <DoorOpen className="w-6 h-6" /> Acik Odalar
                 </h2>
-                <p className="text-indigo-100 text-xs font-medium">Şu an aktif tüm özel odalar — katıl, hemen oyna!</p>
+                <p className="text-indigo-100 text-xs font-medium">Su an aktif tum ozel odalar - katil, hemen oyna!</p>
               </div>
-              {/* Live stat */}
               <div className="relative z-10 mt-4 flex items-center gap-4">
                 <div className="bg-white/10 rounded-2xl px-4 py-2 flex items-center gap-2 border border-white/15">
                   <Users className="w-4 h-4 text-white/80" />
@@ -619,23 +616,21 @@ export default function App() {
                 </div>
                 <div className="bg-white/10 rounded-2xl px-4 py-2 flex items-center gap-2 border border-white/15">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="font-mono text-sm font-black">{lobbyStats.onlineCount} çevrimiçi</span>
+                  <span className="font-mono text-sm font-black">{lobbyStats.onlineCount} cevrimici</span>
                 </div>
               </div>
-              {/* Decorative */}
               <div className="absolute right-6 top-4 text-8xl opacity-10 select-none font-black">✕</div>
               <div className="absolute right-20 bottom-2 text-5xl opacity-10 select-none font-black">○</div>
             </div>
 
             <ActiveRooms socket={socket} currentUserId={user.userId} onJoinRoom={(code) => handleJoinCustomRoom(code)} />
 
-            {/* Create own room CTA */}
             <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm glow-card">
               <div className="flex items-center gap-3 mb-5">
                 <div className="p-2.5 bg-slate-100 text-slate-700 rounded-2xl"><PlusCircle className="w-5 h-5" /></div>
                 <div>
-                  <h3 className="font-extrabold text-base text-slate-800">Kendi Odanı Aç</h3>
-                  <p className="text-xs text-slate-400">Arkadaşını davet et ve özel maç oyna</p>
+                  <h3 className="font-extrabold text-base text-slate-800">Kendi Odani Ac</h3>
+                  <p className="text-xs text-slate-400">Arkadasini davet et ve ozel mac oyna</p>
                 </div>
               </div>
               {customRoomError && (
@@ -644,9 +639,8 @@ export default function App() {
                 </div>
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Create */}
                 <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-4">
-                  <div><h4 className="font-bold text-xs text-slate-700 uppercase tracking-tight">Oda Oluştur</h4></div>
+                  <div><h4 className="font-bold text-xs text-slate-700 uppercase tracking-tight">Oda Olustur</h4></div>
                   <div className="flex gap-1.5">
                     {[1, 3, 5].map((n) => (
                       <button key={n} onClick={() => setCustomRounds(n)} className={`flex-1 py-1.5 rounded-xl border text-xs font-bold cursor-pointer transition-all ${customRounds === n ? 'bg-slate-900 border-slate-900 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}>{n} Tur</button>
@@ -656,16 +650,15 @@ export default function App() {
                     <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-center">
                       <span className="text-[9px] uppercase tracking-wider font-bold text-indigo-400 block">Oda Kodun</span>
                       <span className="font-mono text-lg font-black text-indigo-700 tracking-widest block select-all mt-1">{privateRoomCode}</span>
-                      <p className="text-[10px] text-indigo-400 mt-1">Kopyalayıp arkadaşına gönder!</p>
+                      <p className="text-[10px] text-indigo-400 mt-1">Kopyalayıp arkadasina gonder!</p>
                     </div>
                   ) : (
                     <button onClick={handleCreateCustomRoom} className="btn-shine w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm cursor-pointer">Oda Kodu Al</button>
                   )}
                 </div>
-                {/* Join */}
                 <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-4">
-                  <div><h4 className="font-bold text-xs text-slate-700 uppercase tracking-tight">Koda Göre Katıl</h4></div>
-                  <input type="text" value={codeToJoin} onChange={(e) => setCodeToJoin(e.target.value)} placeholder="Oda Kodu (ör: ABC12D)" className="w-full bg-white border border-slate-200 text-xs px-3.5 py-2.5 rounded-xl uppercase font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-colors" />
+                  <div><h4 className="font-bold text-xs text-slate-700 uppercase tracking-tight">Koda Gore Katil</h4></div>
+                  <input type="text" value={codeToJoin} onChange={(e) => setCodeToJoin(e.target.value)} placeholder="Oda Kodu (or: ABC12D)" className="w-full bg-white border border-slate-200 text-xs px-3.5 py-2.5 rounded-xl uppercase font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-colors" />
                   <button onClick={() => handleJoinCustomRoom()} disabled={!codeToJoin.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm cursor-pointer">Odaya Gir</button>
                 </div>
               </div>
@@ -677,15 +670,15 @@ export default function App() {
         {activePageView === 'lobby' && (
           <main className="max-w-6xl w-full mx-auto px-4 py-8 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-scaleUp">
 
-            {/* Left column — actions */}
+            {/* Left column */}
             <div className="lg:col-span-12 xl:col-span-7 space-y-6">
 
               {/* Stats Bar */}
               <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-4 text-white flex items-center justify-around border border-slate-700/60 shadow-md">
                 {[
-                  { label: 'Çevrimiçi', value: `${lobbyStats.onlineCount}`, color: 'text-emerald-400', suffix: 'oyuncu' },
-                  { label: 'Savaşanlar', value: `${lobbyStats.usersPlaying}`, color: 'text-indigo-400', suffix: 'kişi' },
-                  { label: 'Aktif Maç', value: `${lobbyStats.activeGames}`, color: 'text-violet-400', suffix: 'seri' },
+                  { label: 'Cevrimici', value: `${lobbyStats.onlineCount}`, color: 'text-emerald-400', suffix: 'oyuncu' },
+                  { label: 'Savasanlar', value: `${lobbyStats.usersPlaying}`, color: 'text-indigo-400', suffix: 'kisi' },
+                  { label: 'Aktif Mac', value: `${lobbyStats.activeGames}`, color: 'text-violet-400', suffix: 'seri' },
                 ].map((s, i) => (
                   <React.Fragment key={s.label}>
                     {i > 0 && <div className="w-px h-8 bg-slate-700" />}
@@ -699,15 +692,14 @@ export default function App() {
 
               {/* Matchmaking Card */}
               <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm glow-card space-y-5 relative overflow-hidden">
-                {/* Background decoration */}
                 <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-violet-600 text-white rounded-2xl shadow-sm shadow-indigo-200">
                     <Zap className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-base text-slate-800 tracking-tight">Eşleş ve Savaş</h3>
-                    <p className="text-xs text-slate-400">ELO'na göre online rakip bul</p>
+                    <h3 className="font-extrabold text-base text-slate-800 tracking-tight">Esles ve Savas</h3>
+                    <p className="text-xs text-slate-400">ELOna gore online rakip bul</p>
                   </div>
                 </div>
 
@@ -720,15 +712,15 @@ export default function App() {
                       </div>
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-800">Rakip Aranıyor...</h4>
+                      <h4 className="font-bold text-sm text-slate-800">Rakip Araniyor...</h4>
                       <p className="text-slate-400 text-xs mt-1">ELO {user.elo} ±200 · {searchRounds} Tur</p>
                       <span className="font-mono text-2xl font-black text-indigo-600 block mt-2">{formatTimer(queueTimer)}</span>
                     </div>
-                    <button onClick={handleCancelMatchmaking} className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 py-2 rounded-xl transition-all cursor-pointer shadow-sm">Aramayı İptal Et</button>
+                    <button onClick={handleCancelMatchmaking} className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 py-2 rounded-xl transition-all cursor-pointer shadow-sm">Aramayi Iptal Et</button>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Kaç tur oynayalım?</span>
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Kac tur oynayalim?</span>
                     <div className="grid grid-cols-5 gap-2">
                       {[1, 2, 3, 4, 5].map((n) => (
                         <button key={n} onClick={() => setSearchRounds(n)}
@@ -738,56 +730,53 @@ export default function App() {
                       ))}
                     </div>
                     <button onClick={handleStartMatchmaking} className="btn-shine w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2">
-                      <Sword className="w-4 h-4" /> Hemen Eşleş
+                      <Sword className="w-4 h-4" /> Hemen Esles
                     </button>
                   </div>
                 )}
               </div>
 
-              {/* Offline AI Card */}
-<div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm glow-card space-y-4 relative overflow-hidden">
-  <div className="flex items-center gap-3">
-    <div className="p-2.5 bg-gradient-to-br from-slate-700 to-slate-900 text-white rounded-2xl shadow-sm">
-      <WifiOff className="w-5 h-5" />
-    </div>
-    <div>
-      <h3 className="font-extrabold text-base text-slate-800 tracking-tight">Offline Oyna</h3>
-      <p className="text-xs text-slate-400">Internetsiz oyna - ELO kazanilmaz</p>
-    </div>
-  </div>
-  
-  {/* 2 buton yan yana */}
-  <div className="grid grid-cols-2 gap-3">
-    <button
-      onClick={() => setOfflineModalOpen(true)}
-      className="w-full bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white font-bold py-3 rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
-    >
-      <Bot className="w-4 h-4" /> AI
-    </button>
-    <button
-      onClick={() => setOfflineTwoPlayerModalOpen(true)}
-      className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-3 rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
-    >
-      <Users className="w-4 h-4" /> 2 Kisi
-    </button>
-  </div>
-</div>
-
-
+              {/* Offline Card - FIXED: 2 buttons side by side */}
+              <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm glow-card space-y-4 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-gradient-to-br from-slate-700 to-slate-900 text-white rounded-2xl shadow-sm">
+                    <WifiOff className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-slate-800 tracking-tight">Offline Oyna</h3>
+                    <p className="text-xs text-slate-400">Internetsiz oyna - ELO kazanilmaz</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setOfflineModalOpen(true)}
+                    className="w-full bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white font-bold py-3 rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Bot className="w-4 h-4" /> AI
+                  </button>
+                  <button
+                    onClick={() => setOfflineTwoPlayerModalOpen(true)}
+                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-3 rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Users className="w-4 h-4" /> 2 Kisi
+                  </button>
+                </div>
+              </div>
 
               {/* Private Room Card */}
               <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm glow-card space-y-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-slate-100 text-slate-700 rounded-2xl"><PlusCircle className="w-5 h-5" /></div>
                   <div>
-                    <h3 className="font-extrabold text-base text-slate-800 tracking-tight">Özel Oda</h3>
-                    <p className="text-xs text-slate-400">Arkadaşınla oda kodu ile oyna · <button onClick={() => setActivePageView('rooms')} className="text-indigo-500 hover:underline cursor-pointer">Tüm odaları gör →</button></p>
+                    <h3 className="font-extrabold text-base text-slate-800 tracking-tight">Ozel Oda</h3>
+                    <p className="text-xs text-slate-400">Arkadasinla oda kodu ile oyna · <button onClick={() => setActivePageView('rooms')} className="text-indigo-500 hover:underline cursor-pointer">Tum odalari gor →</button></p>
                   </div>
                 </div>
                 {customRoomError && <div className="bg-rose-50 border border-rose-100 text-rose-600 text-xs p-3 rounded-xl flex items-center gap-2"><AlertCircle className="w-4 h-4 shrink-0" />{customRoomError}</div>}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-3">
-                    <h4 className="font-bold text-xs text-slate-700 uppercase tracking-tight">Oda Oluştur</h4>
+                    <h4 className="font-bold text-xs text-slate-700 uppercase tracking-tight">Oda Olustur</h4>
                     <div className="flex gap-1.5">
                       {[1, 3, 5].map((n) => (
                         <button key={n} onClick={() => setCustomRounds(n)} className={`flex-1 py-1.5 rounded-xl border text-xs font-bold cursor-pointer transition-all ${customRounds === n ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}>{n} Tur</button>
@@ -795,7 +784,7 @@ export default function App() {
                     </div>
                     {privateRoomCode ? (
                       <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
-                        <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 block">Giriş Kodu</span>
+                        <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 block">Giris Kodu</span>
                         <span className="font-mono text-base font-black text-indigo-600 tracking-wider block select-all mt-1">{privateRoomCode}</span>
                       </div>
                     ) : (
@@ -803,7 +792,7 @@ export default function App() {
                     )}
                   </div>
                   <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-3">
-                    <h4 className="font-bold text-xs text-slate-700 uppercase tracking-tight">Odaya Katıl</h4>
+                    <h4 className="font-bold text-xs text-slate-700 uppercase tracking-tight">Odaya Katil</h4>
                     <input type="text" value={codeToJoin} onChange={(e) => setCodeToJoin(e.target.value)} placeholder="Oda Kodu (ABC12D)" className="w-full bg-white border border-slate-200 text-xs px-3 py-2.5 rounded-xl uppercase font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-colors" />
                     <button onClick={() => handleJoinCustomRoom()} disabled={!codeToJoin.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold text-xs py-2.5 rounded-xl transition-all cursor-pointer">Odaya Gir</button>
                   </div>
@@ -814,14 +803,14 @@ export default function App() {
               <UserProfile user={user} onUpdateAvatar={handleUpdateAvatar} dbInfo={dbStatus} />
             </div>
 
-            {/* Right column — chat */}
+            {/* Right column */}
             <div className="lg:col-span-12 xl:col-span-5 space-y-6 h-full">
               <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm glow-card flex flex-col h-[580px]">
                 <div className="flex items-center gap-2 pb-3 border-b border-slate-100 mb-1">
                   <MessageSquare className="w-4 h-4 text-indigo-600" />
                   <div>
                     <h3 className="text-xs font-black text-slate-800 uppercase tracking-wide">Genel Sohbet</h3>
-                    <p className="text-[10px] text-slate-400">Lobideki oyuncularla konuş</p>
+                    <p className="text-[10px] text-slate-400">Lobideki oyuncularla konus</p>
                   </div>
                 </div>
                 <div className="flex-1 overflow-hidden">
@@ -834,7 +823,7 @@ export default function App() {
 
         <footer className="bg-white border-t border-slate-100 py-5 mt-auto">
           <p className="text-center text-slate-400 text-xs font-mono">
-            &copy; {new Date().getFullYear()} XOX Online · Tüm Hakları Saklıdır
+            &copy; {new Date().getFullYear()} XOX Online · Tum Haklari Saklidir
           </p>
         </footer>
       </div>
@@ -845,12 +834,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-mesh antialiased font-sans flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
-      {/* Floating orbs */}
       <div className="orb-a absolute top-[10%] left-[15%] w-72 h-72 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
       <div className="orb-b absolute bottom-[10%] right-[10%] w-96 h-96 bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
       <div className="orb-c absolute top-[40%] right-[25%] w-48 h-48 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
 
-      {/* Floating XO symbols */}
       <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
         {['✕', '○', '✕', '○', '✕', '○'].map((sym, i) => (
           <span key={i} className="absolute text-white/5 font-black"
@@ -861,9 +848,7 @@ export default function App() {
       </div>
 
       <div className="w-full max-w-md relative z-10">
-        {/* Card */}
         <div className="bg-white/95 backdrop-blur-xl border border-white/60 rounded-3xl p-7 shadow-2xl shadow-black/20 space-y-7 animate-scaleUp">
-          {/* Logo area */}
           <div className="text-center space-y-3">
             <div className="relative inline-block">
               <div className="absolute inset-0 bg-indigo-500/20 rounded-3xl blur-xl" />
@@ -875,7 +860,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Alerts */}
           {authError && (
             <div className="bg-rose-50 border border-rose-100 text-rose-600 text-xs px-4 py-3 rounded-xl flex items-center gap-2 animate-fadeIn">
               <AlertCircle className="w-4 h-4 shrink-0" /><span className="font-medium">{authError}</span>
@@ -887,32 +871,30 @@ export default function App() {
             </div>
           )}
 
-          {/* Tab toggle */}
           <div className="flex bg-slate-100 p-1 rounded-2xl">
             {(['login', 'register'] as const).map((mode) => (
               <button key={mode} onClick={() => { setAuthMode(mode); setAuthError(null); setAuthSuccessMsg(null); }}
                 className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${authMode === mode ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-500 hover:text-slate-700'}`}>
-                {mode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
+                {mode === 'login' ? 'Giris Yap' : 'Kayit Ol'}
               </button>
             ))}
           </div>
 
-          {/* Form */}
           <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Kullanıcı Adı</label>
-              <input type="text" required minLength={3} maxLength={15} value={usernameInput} onChange={(e) => setUsernameInput(e.target.value)} placeholder="Örn: xox_ustasi"
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Kullanici Adi</label>
+              <input type="text" required minLength={3} maxLength={15} value={usernameInput} onChange={(e) => setUsernameInput(e.target.value)} placeholder="Orn: xox_ustasi"
                 className="w-full bg-slate-50 border border-slate-200 text-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors" />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Şifre</label>
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Sifre</label>
               <input type="password" required value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} placeholder="••••••••"
                 className="w-full bg-slate-50 border border-slate-200 text-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors" />
             </div>
 
             {authMode === 'register' && (
               <div className="space-y-2.5 animate-fadeIn">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide block">Karakter Seç</label>
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide block">Karakter Sec</label>
                 <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
                   {PRESET_AVATARS.map((av, idx) => (
                     <button key={av.name} type="button" onClick={() => { setAvatarSeedIndex(idx); setAvatarInput(''); }}
@@ -922,7 +904,7 @@ export default function App() {
                     </button>
                   ))}
                 </div>
-                <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">— veya özel link —</div>
+                <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">— veya ozel link —</div>
                 <input type="text" value={avatarInput} onChange={(e) => setAvatarInput(e.target.value)} placeholder="https://... resim linki"
                   className="w-full bg-slate-50 border border-slate-200 text-xs px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors" />
               </div>
@@ -933,17 +915,16 @@ export default function App() {
               {authLoading ? (
                 <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : authMode === 'login' ? (
-                <><LogIn className="w-4 h-4" /> Giriş Yap</>
+                <><LogIn className="w-4 h-4" /> Giris Yap</>
               ) : (
-                <><Dribbble className="w-4 h-4" /> Kayıt Ol ve Katıl</>
+                <><Dribbble className="w-4 h-4" /> Kayit Ol ve Katil</>
               )}
             </button>
           </form>
         </div>
 
-        {/* SEO blurb below card */}
         <p className="text-center text-white/30 text-[10px] mt-6 font-medium">
-          Ücretsiz · Gerçek Zamanlı · ELO Sıralama · Rekabetçi XOX
+          Ucretsiz · Gercek Zamanli · ELO Siralama · Rekabetci XOX
         </p>
       </div>
     </div>
