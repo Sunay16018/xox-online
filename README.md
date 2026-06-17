@@ -1,45 +1,48 @@
-# XOX Online - ELO Rating Sistemi
+# XOX Arena 🎮
 
-Premium kalitede, Socket.IO tabanli online XOX oyunu.
+**Gerçek zamanlı çevrimiçi XOX (Tic-Tac-Toe) oyunu**
 
-## Ozellikler
+ELO puanlama sistemi, lobi sohbeti, özel oda desteği ve PWA ile donatılmış tam özellikli multiplayer oyun platformu.
 
-- Hesap sistemi (kayit/giris)
-- Avatar URL ile profil resmi
-- Oda olusturma (6 haneli kod)
-- Odaya katilma (kod ile)
-- Hizli eslesme (ELO rating bazli)
-- 1-5 tur secimi
-- ELO Rating sistemi (chess.com tarzi)
-- Win Streak bonus sistemi
-- Global ve oda ici chat
-- Turkiye saati ile zaman damgasi
-- Liderlik tablosu
-- MongoDB Atlas entegrasyonu
+## 🚀 Render.com'da Yayınlama
 
-## Teknolojiler
+### 1. Ortam Değişkenleri (Environment Variables)
 
-- Node.js + Express
-- Socket.IO
-- MongoDB Atlas (Mongoose)
-- JWT Authentication
-- bcryptjs
+Render.com dashboard'unda şu değişkenleri ayarlayın:
 
-## Deploy (Render.com)
+| Değişken | Açıklama | Zorunlu |
+|---|---|---|
+| `MONGO_URI` | MongoDB Atlas bağlantı dizesi | Hayır (in-memory fallback) |
+| `JWT_SECRET` | JWT imzalama anahtarı | **Evet** |
+| `NODE_ENV` | `production` olarak ayarlayın | **Evet** |
 
-1. GitHub repo olustur ve push et
-2. Render.com'da "New Web Service" sec
-3. GitHub repo'yu bagla
-4. Environment Variables ekle:
-   - `MONGODB_URI`: mongodb+srv://xox:xoxadmin@xox.er1hgnl.mongodb.net/xox_game?retryWrites=true&w=majority
-   - `JWT_SECRET`: guclu-bir-sifre-yaz
-5. Deploy!
+### 2. Build & Start Komutları
 
-## Yerel Calistirma
+- **Build Command:** `npm install && npm run build`
+- **Start Command:** `npm start`
+- **Node Version:** 18+
+
+### 3. MongoDB Atlas (Opsiyonel)
+
+MongoDB olmadan da çalışır (in-memory). Kalıcı veri için Atlas'tan ücretsiz cluster alın ve `MONGO_URI`'yi ayarlayın.
+
+## 🛠️ Lokal Geliştirme
 
 ```bash
 npm install
-npm start
+cp .env.example .env
+# .env içinde gerekli değerleri ayarlayın
+npm run dev
 ```
 
-Sunucu `http://localhost:3000` adresinde calisir.
+## ✨ Özellikler
+
+- 🎯 **Gerçek Zamanlı Multiplayer** - Socket.IO ile anlık oyun
+- 📊 **ELO Sistemi** - Rekabetçi sıralama
+- 🏆 **Liderlik Tablosu** - Top 500 oyuncu
+- 💬 **Lobi & Oda Sohbeti** - Anlık mesajlaşma
+- 🔐 **JWT Kimlik Doğrulama** - Güvenli oturum yönetimi
+- 🎭 **Özel Odalar** - Arkadaşlarla özel maç
+- 📱 **PWA Desteği** - Mobil'e eklenebilir uygulama
+- 🗄️ **MongoDB Atlas** - Kalıcı veri (opsiyonel)
+- ⚡ **In-Memory Fallback** - Veritabanı olmadan da çalışır

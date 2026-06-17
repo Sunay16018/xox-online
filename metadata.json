@@ -1,0 +1,5 @@
+{
+  "name": "XOX Arena",
+  "description": "Socket.IO ve MongoDB destekli, ELO sistemli ve sohbetli gerçek zamanlı çevrimiçi XOX oyunu.",
+  "version": "1.0.0"
+}
