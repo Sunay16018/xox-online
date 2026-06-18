@@ -1,0 +1,36 @@
+{
+  "name": "XOX Arena",
+  "short_name": "XOX Arena",
+  "description": "Gerçek zamanlı online XOX oyunu. ELO sistemi, lobi sohbeti, AI modu.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e1b4b",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "lang": "tr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/xox_icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/xox_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/xox_pro.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "prefer_related_applications": false
+}
