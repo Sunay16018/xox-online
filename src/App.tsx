@@ -213,6 +213,21 @@ export default function App() {
   // ─── Effects ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (token) {
+      // Offline user varsa, localStorage'dan yükle
+      if (token.startsWith('offline_')) {
+        const offlineUser = localStorage.getItem('xox_offline_user');
+        if (offlineUser) {
+          try {
+            setUser(JSON.parse(offlineUser));
+            return;
+          } catch (e) {
+            console.error('Offline user parse hatası:', e);
+            handleLogout();
+            return;
+          }
+        }
+      }
+      // Online user: normal fetch
       fetch('/api/user/profile', { headers: { Authorization: `Bearer ${token}` } })
         .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
         .then(setUser)
@@ -275,6 +290,7 @@ export default function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('xox_jwt_token');
+    localStorage.removeItem('xox_offline_user');
     setToken(null); setUser(null); setActiveGame(null);
     setMatchmakingActive(false); cancelMatchmakingInterval();
   };
@@ -295,10 +311,10 @@ export default function App() {
           throw new Error('Kullanıcı adı 3 ile 15 karakter arasında olmalıdır.');
         }
         
-        const offlineUser = {
-          userId: 'offline_' + Date.now(),
+        const userId = 'offline_' + Date.now();
+        const offlineUser: UserInfo = {
+          userId,
           username: usernameInput,
-          password: passwordInput, // Gerçek uygulamada hash'lenmeliydi, demo için olduğu gibi
           avatarUrl: avatarToSave,
           elo: 1200,
           totalGames: 0,
@@ -306,14 +322,16 @@ export default function App() {
           currentWinStreak: 0,
           maxWinStreak: 0,
         };
-        offlineUsers[usernameInput] = offlineUser;
+        
+        // Şifreyi ayrı bir yerde sakla
+        offlineUsers[usernameInput] = { ...offlineUser, _password: passwordInput };
         localStorage.setItem('xox_offline_users', JSON.stringify(offlineUsers));
         
         setAuthSuccessMsg('Hesap oluşturuldu (Çevrimdışı)! Giriş yapılıyor...');
         setTimeout(() => {
-          localStorage.setItem('xox_jwt_token', 'offline_' + Date.now());
+          localStorage.setItem('xox_jwt_token', userId);
           localStorage.setItem('xox_offline_user', JSON.stringify(offlineUser));
-          setToken('offline_' + Date.now());
+          setToken(userId);
           setUser(offlineUser);
           resetAuthForm();
         }, 1200);
@@ -338,19 +356,22 @@ export default function App() {
       if (!navigator.onLine) {
         // Offline mode: local storage'dan kontrol et
         const offlineUsers = JSON.parse(localStorage.getItem('xox_offline_users') || '{}');
-        const user = offlineUsers[usernameInput];
+        const storedUser = offlineUsers[usernameInput];
         
-        if (!user || user.password !== passwordInput) {
+        if (!storedUser || storedUser._password !== passwordInput) {
           throw new Error('Hatalı kullanıcı adı veya şifre (Çevrimdışı).');
         }
         
+        // UserInfo olarak extract et (password hariç)
+        const { _password, ...userInfo } = storedUser;
+        
         setAuthSuccessMsg('Giriş başarılı (Çevrimdışı)! Yönlendiriliyorsunuz...');
         setTimeout(() => {
-          const token = 'offline_' + Date.now();
+          const token = userInfo.userId;
           localStorage.setItem('xox_jwt_token', token);
-          localStorage.setItem('xox_offline_user', JSON.stringify(user));
+          localStorage.setItem('xox_offline_user', JSON.stringify(userInfo));
           setToken(token);
-          setUser(user);
+          setUser(userInfo);
           resetAuthForm();
         }, 800);
         setAuthLoading(false);
