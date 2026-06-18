@@ -6,6 +6,8 @@
   <title>XOX Arena — Çevrimdışı</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     body {
       min-height: 100vh;
       display: flex;
@@ -31,6 +33,7 @@
       font-size: 64px;
       margin-bottom: 24px;
       display: block;
+      animation: pulse 2s ease-in-out infinite;
     }
     h1 {
       font-size: 1.75rem;
@@ -57,8 +60,16 @@
       cursor: pointer;
       text-decoration: none;
       transition: background 0.2s;
+      margin: 4px;
     }
     .btn:hover { background: #4338ca; }
+    .btn-secondary {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.3);
+    }
     .offline-badge {
       display: inline-flex;
       align-items: center;
@@ -72,25 +83,68 @@
       font-weight: 600;
       margin-bottom: 24px;
     }
+    .pulse-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #fda4af;
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .status {
+      margin-top: 32px;
+      padding: 16px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.6);
+    }
   </style>
 </head>
 <body>
   <div class="card">
     <span class="icon">📡</span>
     <div class="offline-badge">
-      <span>●</span> Çevrimdışı
+      <span class="pulse-dot"></span> Çevrimdışı
     </div>
     <h1>İnternet Bağlantısı Yok</h1>
     <p>
-      Online modda oynamak için internet bağlantısına ihtiyaç var.<br><br>
-      Uygulama önbelleğe alındıysa <strong>AI ile Oyna</strong> modunda
-      internetsiz oynayabilirsin!
+      Online oyun ve eşleşme özelliklerine erişmek için internet bağlantısına ihtiyaç var.<br><br>
+      Uygulama daha önce ziyaret ettiysen, AI ile Offline modda oynayabilirsin!
     </p>
-    <button class="btn" onclick="location.reload()">🔄 Tekrar Dene</button>
+    <div>
+      <button class="btn" onclick="location.reload()">🔄 Tekrar Dene</button>
+      <button class="btn btn-secondary" onclick="location.href='/'">🏠 Ana Sayfa</button>
+    </div>
+    <div class="status" id="status">
+      Bağlantı kontrol ediliyor... ⏳
+    </div>
   </div>
   <script>
-    // Bağlantı geldiğinde otomatik yenile
-    window.addEventListener('online', () => location.reload());
+    // Check connection every 2 seconds
+    let checkInterval;
+    function checkConnection() {
+      fetch('/', { method: 'HEAD', cache: 'no-store' })
+        .then(() => {
+          // Connection restored
+          document.getElementById('status').textContent = '✅ İnternet geri geldi! Sayfa yükleniyor...';
+          clearInterval(checkInterval);
+          setTimeout(() => location.reload(), 1000);
+        })
+        .catch(() => {
+          // Still offline
+          document.getElementById('status').textContent = '📡 Hala çevrimdışı. Kontrol ediliyor...';
+        });
+    }
+
+    checkInterval = setInterval(checkConnection, 2000);
+
+    // Also listen to online event
+    window.addEventListener('online', () => {
+      document.getElementById('status').textContent = '✅ İnternet bağlandı! Yenileniyor...';
+      clearInterval(checkInterval);
+      setTimeout(() => location.reload(), 500);
+    });
   </script>
 </body>
 </html>
