@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XOX Arena — Çevrimdışı</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #fff;
+      padding: 24px;
+      text-align: center;
+    }
+    .card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 24px;
+      padding: 48px 40px;
+      max-width: 400px;
+      width: 100%;
+      backdrop-filter: blur(12px);
+    }
+    .icon {
+      font-size: 64px;
+      margin-bottom: 24px;
+      display: block;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 900;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, #a5b4fc, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    p {
+      color: rgba(255,255,255,0.65);
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    .btn {
+      display: inline-block;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 14px 32px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #4338ca; }
+    .offline-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(244, 63, 94, 0.2);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      color: #fda4af;
+      border-radius: 99px;
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="icon">📡</span>
+    <div class="offline-badge">
+      <span>●</span> Çevrimdışı
+    </div>
+    <h1>İnternet Bağlantısı Yok</h1>
+    <p>
+      Online modda oynamak için internet bağlantısına ihtiyaç var.<br><br>
+      Uygulama önbelleğe alındıysa <strong>AI ile Oyna</strong> modunda
+      internetsiz oynayabilirsin!
+    </p>
+    <button class="btn" onclick="location.reload()">🔄 Tekrar Dene</button>
+  </div>
+  <script>
+    // Bağlantı geldiğinde otomatik yenile
+    window.addEventListener('online', () => location.reload());
+  </script>
+</body>
+</html>

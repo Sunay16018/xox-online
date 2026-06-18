@@ -117,11 +117,24 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://api.dicebear.com" />
 
-    <!-- Service Worker -->
+    <!-- Service Worker (PWA offline desteği) -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
+          navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then((reg) => {
+              reg.addEventListener('updatefound', () => {
+                const nw = reg.installing;
+                if (nw) {
+                  nw.addEventListener('statechange', () => {
+                    if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                      console.info('[SW] Yeni sürüm hazır, bir sonraki ziyarette aktif olur.');
+                    }
+                  });
+                }
+              });
+            })
+            .catch((err) => console.warn('[SW] Kayıt başarısız:', err));
         });
       }
     </script>

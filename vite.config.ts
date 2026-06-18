@@ -5,6 +5,9 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
   return {
+    // public/ klasöründeki dosyalar (sw.js, manifest.json, offline.html)
+    // build sırasında dist/ köküne olduğu gibi kopyalanır.
+    publicDir: 'public',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
