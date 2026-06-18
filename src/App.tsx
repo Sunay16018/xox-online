@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import {
   Trophy, MessageSquare, LogOut, Zap, Sword, PlusCircle,
   LogIn, Dribbble, CheckCircle2, Hourglass, AlertCircle,
-  DoorOpen, Sparkles, X, Users, Bot, WifiOff
+  DoorOpen, Sparkles, X, Users, Bot, WifiOff, Bell, Settings
 } from 'lucide-react';
 import { UserInfo, PlayerState, LobbyStats } from './types';
 import Leaderboard from './components/Leaderboard';
@@ -12,6 +12,35 @@ import UserProfile from './components/UserProfile';
 import TicTacToeGame from './components/TicTacToeGame';
 import ActiveRooms from './components/ActiveRooms';
 import OfflineGame, { AIDifficulty } from './components/OfflineGame';
+
+// Notification preferences type
+type NotificationType = 'matchFound' | 'matchEnded' | 'chatMessage' | 'eloChange' | 'roomCreated' | 'roomJoined' | 'offlineGameWin' | 'offlineGameLose' | 'connectionRestored' | 'connectionLost';
+
+interface NotificationPrefs {
+  matchFound: boolean;
+  matchEnded: boolean;
+  chatMessage: boolean;
+  eloChange: boolean;
+  roomCreated: boolean;
+  roomJoined: boolean;
+  offlineGameWin: boolean;
+  offlineGameLose: boolean;
+  connectionRestored: boolean;
+  connectionLost: boolean;
+}
+
+const DEFAULT_NOTIF_PREFS: NotificationPrefs = {
+  matchFound: true,
+  matchEnded: true,
+  chatMessage: true,
+  eloChange: true,
+  roomCreated: true,
+  roomJoined: true,
+  offlineGameWin: true,
+  offlineGameLose: true,
+  connectionRestored: true,
+  connectionLost: true,
+};
 
 // ─── Toast System ───────────────────────────────────────────────────────────
 type ToastType = 'success' | 'error' | 'info' | 'warning';
@@ -153,6 +182,86 @@ function OfflineDifficultyModal({ onSelect, onClose }: {
   );
 }
 
+// ─── Settings Modal ────────────────────────────────────────────────────────
+function SettingsModal({ 
+  isOpen, 
+  onClose, 
+  notifPrefs, 
+  onPrefsChange 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  notifPrefs: NotificationPrefs;
+  onPrefsChange: (prefs: NotificationPrefs) => void;
+}) {
+  const notifTypes: Array<{ key: NotificationType; label: string; desc: string; icon: string }> = [
+    { key: 'matchFound', label: 'Maç Bulundu', desc: 'Rakip bulunduğunda bildir', icon: '⚡' },
+    { key: 'matchEnded', label: 'Maç Sonu', desc: 'Maç bittiğinde bildir', icon: '🏁' },
+    { key: 'chatMessage', label: 'Chat Mesajı', desc: 'Lobi sohbetinde yeni mesaj varsa bildir', icon: '💬' },
+    { key: 'eloChange', label: 'ELO Değişimi', desc: 'ELO puanın değiştiğinde bildir', icon: '📊' },
+    { key: 'roomCreated', label: 'Oda Oluşturuldu', desc: 'Yeni oda oluşturduğunda bildir', icon: '🚪' },
+    { key: 'roomJoined', label: 'Odaya Girildi', desc: 'Birisi odana girdiğinde bildir', icon: '👥' },
+    { key: 'offlineGameWin', label: 'Offline Zafer', desc: 'AI\'yi yendiğinde bildir', icon: '🏆' },
+    { key: 'offlineGameLose', label: 'Offline Yenilgi', desc: 'AI seni yendiğinde bildir', icon: '🤖' },
+    { key: 'connectionRestored', label: 'Bağlantı Geri Geldi', desc: 'İnternet bağlantısı geri geldiğinde bildir', icon: '🌐' },
+    { key: 'connectionLost', label: 'Bağlantı Kesildi', desc: 'İnternet bağlantısı koptuğunda bildir', icon: '📡' },
+  ];
+
+  return (
+    <>
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-7 max-w-2xl w-full shadow-2xl space-y-6 animate-scaleUp max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between sticky top-0 bg-white pb-4 border-b">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center">
+                  <Bell className="w-6 h-6 text-indigo-600" />
+                </div>
+                <h2 className="font-black text-xl text-slate-900">Bildirim Ayarları</h2>
+              </div>
+              <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {notifTypes.map((nt) => (
+                <label key={nt.key} className="flex items-center gap-3 p-3 rounded-2xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all cursor-pointer group">
+                  <input 
+                    type="checkbox" 
+                    checked={notifPrefs[nt.key]}
+                    onChange={(e) => onPrefsChange({ ...notifPrefs, [nt.key]: e.target.checked })}
+                    className="w-5 h-5 rounded-lg accent-indigo-600 cursor-pointer"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{nt.icon}</span>
+                      <p className="font-bold text-slate-800 text-sm group-hover:text-indigo-700">{nt.label}</p>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">{nt.desc}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3">
+              <span className="text-xl mt-0.5">ℹ️</span>
+              <div className="text-sm text-blue-800">
+                <p className="font-bold">Bildirimler Web Notifications kullanarak çalışır.</p>
+                <p className="text-xs mt-1 text-blue-700">Tarayıcı bildirim izni vermişse sistem bildirimleri alacaksın.</p>
+              </div>
+            </div>
+
+            <button onClick={onClose} className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold py-3 rounded-2xl transition-all">
+              Kapat
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function App() {
   // ─── Auth ────────────────────────────────────────────────────────────────
   const [token, setToken] = useState<string | null>(localStorage.getItem('xox_jwt_token'));
@@ -202,6 +311,54 @@ export default function App() {
   const [offlineModalOpen, setOfflineModalOpen] = useState(false);
   const [offlineGame, setOfflineGame] = useState<{ difficulty: AIDifficulty; rounds: number } | null>(null);
 
+  // ─── Notification Settings ────────────────────────────────────────────────
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => {
+    const saved = localStorage.getItem('xox_notif_prefs');
+    return saved ? JSON.parse(saved) : DEFAULT_NOTIF_PREFS;
+  });
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Save notif prefs whenever they change
+  useEffect(() => {
+    localStorage.setItem('xox_notif_prefs', JSON.stringify(notifPrefs));
+  }, [notifPrefs]);
+
+  // Track online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      if (notifPrefs.connectionRestored && Notification.permission === 'granted') {
+        showSystemNotification('🌐 İnternet Bağlantısı Geri Geldi', 'Sunucuya bağlanılıyor...');
+      }
+      // Socket yeniden bağlan
+      if (token && token.startsWith('offline_') === false) {
+        // Online user, reconnect
+        window.location.reload();
+      }
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      if (notifPrefs.connectionLost && Notification.permission === 'granted') {
+        showSystemNotification('📡 İnternet Bağlantısı Kesildi', 'Çevrimdışı moda geçiyorsunuz...');
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [notifPrefs]);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
   const addToast = useCallback((type: ToastType, title: string, message?: string, duration = 4000) => {
     const id = ++_toastId;
     setToasts((prev) => [...prev.slice(-4), { id, type, title, message }]);
@@ -209,6 +366,30 @@ export default function App() {
   }, []);
 
   const removeToast = (id: number) => setToasts((prev) => prev.filter((t) => t.id !== id));
+
+  // ─── Notification Helper ──────────────────────────────────────────────────
+  const showSystemNotification = useCallback((title: string, options?: NotificationOptions) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(title, {
+          icon: '/xox_icon.png',
+          badge: '/xox_icon.png',
+          tag: 'xox-arena-notification',
+          requireInteraction: false,
+          ...options,
+        });
+      } catch (e) {
+        console.warn('Notification gösterilemedi:', e);
+      }
+    }
+  }, []);
+
+  const sendNotification = useCallback((type: NotificationType, title: string, message?: string) => {
+    if (notifPrefs[type]) {
+      showSystemNotification(title, { body: message });
+      addToast('info', title, message);
+    }
+  }, [notifPrefs, showSystemNotification, addToast]);
 
   // ─── Effects ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -260,7 +441,7 @@ export default function App() {
       const enemyPlayer = data.players.find((p) => p.userId !== user.userId);
       if (myPlayer && enemyPlayer) {
         setActiveGame({ roomCode: data.roomCode, me: myPlayer, opponent: enemyPlayer, roundsLimit: data.roundsTotal, gameBoard: data.gameBoard, turnUserId: data.turnUserId, status: data.status });
-        addToast('info', `Maç Başlıyor! ⚡`, `Rakibiniz: ${enemyPlayer.username} (${enemyPlayer.elo} ELO)`);
+        sendNotification('matchFound', '⚡ Maç Bulundu!', `Rakibiniz: ${enemyPlayer.username} (${enemyPlayer.elo} ELO)`);
       }
     });
 
@@ -473,6 +654,8 @@ export default function App() {
             difficulty={offlineGame.difficulty}
             rounds={offlineGame.rounds}
             onExit={() => setOfflineGame(null)}
+            onGameWin={() => sendNotification('offlineGameWin', '🏆 Harika! AI\'yi Yendin!', 'Tebrikler, senin için gurur duyulacak bir zafer!')}
+            onGameLose={() => sendNotification('offlineGameLose', '🤖 AI Kazandı', 'Sonraki sefer daha iyi yapabilirsin!')}
           />
         </main>
       </div>
@@ -520,6 +703,14 @@ export default function App() {
             onClose={() => setOfflineModalOpen(false)}
           />
         )}
+
+        {/* Settings Modal */}
+        <SettingsModal
+          isOpen={showSettingsModal}
+          onClose={() => setShowSettingsModal(false)}
+          notifPrefs={notifPrefs}
+          onPrefsChange={setNotifPrefs}
+        />
 
         {/* Navbar */}
         <header className="nav-glass sticky top-0 z-50 py-3">
@@ -571,6 +762,9 @@ export default function App() {
                   <span className="font-mono text-[9px] font-black text-indigo-500">⭐ {user.elo}</span>
                 </div>
               </div>
+              <button onClick={() => setShowSettingsModal(true)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer" title="Bildirim Ayarları">
+                <Bell className="w-4 h-4" />
+              </button>
               <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all cursor-pointer" title="Çıkış Yap">
                 <LogOut className="w-4 h-4" />
               </button>
