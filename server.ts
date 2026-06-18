@@ -18,6 +18,12 @@ app.use(express.json());
 
 // Serve public folder (sw.js, etc.)
 app.use(express.static(path.join(process.cwd(), 'public')));
+// robots.txt - SEO için explicit route
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain');
+  res.send('User-agent: *\nAllow: /\nSitemap: https://xox-io.onrender.com/sitemap.xml');
+});
+
 
 const JWT_SECRET = process.env.JWT_SECRET || 'xox-super-secret-key-9988';
 
