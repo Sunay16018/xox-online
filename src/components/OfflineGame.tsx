@@ -8,6 +8,8 @@ interface OfflineGameProps {
   difficulty: AIDifficulty;
   rounds: number;
   onExit: () => void;
+  onGameWin?: () => void;
+  onGameLose?: () => void;
 }
 
 // ─── Minimax AI ──────────────────────────────────────────────────────────────
@@ -147,6 +149,17 @@ export default function OfflineGame({ difficulty, rounds, onExit }: OfflineGameP
       }, 1800);
     }
   }, [playerScore, aiScore, currentRound, rounds]);
+
+  // ─── Game Win/Loss Notifications ──────────────────────────────────────────
+  useEffect(() => {
+    if (matchWinner === 'player' && onGameWin) {
+      const timer = setTimeout(() => onGameWin(), 1000);
+      return () => clearTimeout(timer);
+    } else if ((matchWinner === 'ai' || matchWinner === 'draw') && onGameLose) {
+      const timer = setTimeout(() => onGameLose(), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [matchWinner, onGameWin, onGameLose]);
 
   // ─── AI Move ─────────────────────────────────────────────────────────────
   useEffect(() => {
