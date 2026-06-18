@@ -243,12 +243,16 @@ function SettingsModal({
   isOpen, 
   onClose, 
   notifPrefs, 
-  onPrefsChange 
+  onPrefsChange,
+  addToast,
+  showSystemNotification
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
   notifPrefs: NotificationPrefs;
   onPrefsChange: (prefs: NotificationPrefs) => void;
+  addToast: (type: ToastType, title: string, message?: string) => void;
+  showSystemNotification: (title: string, options?: NotificationOptions) => void;
 }) {
   const notifTypes: Array<{ key: NotificationType; label: string; desc: string; icon: string }> = [
     { key: 'welcome', label: 'Hoş Geldin Bildirimi', desc: 'Uygulamaya giriş yaptığında karşılama bildirimi gönder', icon: '👋' },
@@ -279,6 +283,39 @@ function SettingsModal({
               <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
                 <X className="w-5 h-5 text-slate-400" />
               </button>
+            </div>
+
+            {/* Notification Permission Status */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-4 space-y-2">
+              {Notification.permission === 'granted' ? (
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-emerald-700">Tarayıcı Bildirimleri Etkin</p>
+                    <p className="text-xs text-emerald-600">Sistem bildirimleri gönderilecek</p>
+                  </div>
+                </div>
+              ) : Notification.permission === 'denied' ? (
+                <div className="flex items-center gap-3">
+                  <ShieldAlert className="w-5 h-5 text-rose-500 shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-rose-700">Bildirimler Engellendi</p>
+                    <p className="text-xs text-rose-600">Tarayıcı ayarlarından izin ver</p>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => Notification.requestPermission().then((perm) => {
+                    if (perm === 'granted') {
+                      // Sistem bildirimi göster (toast değil)
+                      showSystemNotification('✅ Bildirimler Etkin!', { body: 'Tarayıcı sistem bildirimleri açıldı. Artık YouTube gibi bildirim alacaksın.' });
+                    }
+                  })}
+                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-all cursor-pointer"
+                >
+                  <Bell className="w-4 h-4" /> Tarayıcı Bildirimlerini Etkinleştir
+                </button>
+              )}
             </div>
 
             <div className="space-y-3">
@@ -422,9 +459,9 @@ export default function App() {
   const sendNotification = useCallback((type: NotificationType, title: string, message?: string) => {
     if (notifPrefs[type]) {
       showSystemNotification(title, { body: message });
-      addToast('info', title, message);
+      // In-app toast kaldırıldı, sadece gerçek sistem bildirimi gönderiliyor
     }
-  }, [notifPrefs, showSystemNotification, addToast]);
+  }, [notifPrefs, showSystemNotification]);
 
   // Track online/offline status
   useEffect(() => {
@@ -849,6 +886,8 @@ export default function App() {
           onClose={() => setShowSettingsModal(false)}
           notifPrefs={notifPrefs}
           onPrefsChange={setNotifPrefs}
+          addToast={addToast}
+          showSystemNotification={showSystemNotification}
         />
 
         {/* Navbar */}
