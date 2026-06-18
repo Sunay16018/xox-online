@@ -12,11 +12,13 @@ import UserProfile from './components/UserProfile';
 import TicTacToeGame from './components/TicTacToeGame';
 import ActiveRooms from './components/ActiveRooms';
 import OfflineGame, { AIDifficulty } from './components/OfflineGame';
+import OfflineTwoPlayer from './components/OfflineTwoPlayer';
 
 // Notification preferences type
-type NotificationType = 'matchFound' | 'matchEnded' | 'chatMessage' | 'eloChange' | 'roomCreated' | 'roomJoined' | 'offlineGameWin' | 'offlineGameLose' | 'connectionRestored' | 'connectionLost';
+type NotificationType = 'welcome' | 'matchFound' | 'matchEnded' | 'chatMessage' | 'eloChange' | 'roomCreated' | 'roomJoined' | 'offlineGameWin' | 'offlineGameLose' | 'connectionRestored' | 'connectionLost';
 
 interface NotificationPrefs {
+  welcome: boolean;
   matchFound: boolean;
   matchEnded: boolean;
   chatMessage: boolean;
@@ -30,6 +32,7 @@ interface NotificationPrefs {
 }
 
 const DEFAULT_NOTIF_PREFS: NotificationPrefs = {
+  welcome: true,
   matchFound: true,
   matchEnded: true,
   chatMessage: true,
@@ -182,6 +185,59 @@ function OfflineDifficultyModal({ onSelect, onClose }: {
   );
 }
 
+// ─── Offline Two-Player Rounds Modal ───────────────────────────────────────
+function OfflineTwoPlayerRoundsModal({ onSelect, onClose }: {
+  onSelect: (rounds: number) => void;
+  onClose: () => void;
+}) {
+  const [selectedRounds, setSelectedRounds] = useState(3);
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl p-7 max-w-sm w-full shadow-2xl space-y-6 animate-scaleUp">
+        <div className="text-center space-y-2">
+          <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto">
+            <Users className="w-6 h-6 text-emerald-600" />
+          </div>
+          <h2 className="font-black text-xl text-slate-900">Aynı Cihazdan 2 Kişi</h2>
+          <p className="text-slate-400 text-xs">İnternet olmadan arkadaşınla sırayla oyna!</p>
+        </div>
+
+        <div className="space-y-2">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Kaç Tur?</span>
+          <div className="flex gap-2">
+            {[1, 3, 5].map(n => (
+              <button
+                key={n}
+                onClick={() => setSelectedRounds(n)}
+                className={`flex-1 py-2.5 rounded-xl border text-sm font-extrabold transition-all cursor-pointer ${
+                  selectedRounds === n
+                    ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
+                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                {n} Tur
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl transition-all text-sm cursor-pointer">
+            İptal
+          </button>
+          <button
+            onClick={() => onSelect(selectedRounds)}
+            className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-3 rounded-2xl shadow-lg shadow-emerald-200 transition-all text-sm cursor-pointer flex items-center justify-center gap-2"
+          >
+            <Users className="w-4 h-4" /> Başla!
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Settings Modal ────────────────────────────────────────────────────────
 function SettingsModal({ 
   isOpen, 
@@ -195,6 +251,7 @@ function SettingsModal({
   onPrefsChange: (prefs: NotificationPrefs) => void;
 }) {
   const notifTypes: Array<{ key: NotificationType; label: string; desc: string; icon: string }> = [
+    { key: 'welcome', label: 'Hoş Geldin Bildirimi', desc: 'Uygulamaya giriş yaptığında karşılama bildirimi gönder', icon: '👋' },
     { key: 'matchFound', label: 'Maç Bulundu', desc: 'Rakip bulunduğunda bildir', icon: '⚡' },
     { key: 'matchEnded', label: 'Maç Sonu', desc: 'Maç bittiğinde bildir', icon: '🏁' },
     { key: 'chatMessage', label: 'Chat Mesajı', desc: 'Lobi sohbetinde yeni mesaj varsa bildir', icon: '💬' },
@@ -292,6 +349,8 @@ export default function App() {
   // ─── Private Room ─────────────────────────────────────────────────────────
   const [customRounds, setCustomRounds] = useState<number>(3);
   const [privateRoomCode, setPrivateRoomCode] = useState('');
+  const privateRoomCodeRef = useRef('');
+  useEffect(() => { privateRoomCodeRef.current = privateRoomCode; }, [privateRoomCode]);
   const [codeToJoin, setCodeToJoin] = useState('');
   const [customRoomError, setCustomRoomError] = useState<string | null>(null);
 
@@ -311,10 +370,14 @@ export default function App() {
   const [offlineModalOpen, setOfflineModalOpen] = useState(false);
   const [offlineGame, setOfflineGame] = useState<{ difficulty: AIDifficulty; rounds: number } | null>(null);
 
+  // ─── Offline Two-Player (Same Device) Mode ──────────────────────────────────
+  const [offlineTwoPlayerModalOpen, setOfflineTwoPlayerModalOpen] = useState(false);
+  const [offlineTwoPlayerGame, setOfflineTwoPlayerGame] = useState<{ rounds: number } | null>(null);
+
   // ─── Notification Settings ────────────────────────────────────────────────
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => {
     const saved = localStorage.getItem('xox_notif_prefs');
-    return saved ? JSON.parse(saved) : DEFAULT_NOTIF_PREFS;
+    return saved ? { ...DEFAULT_NOTIF_PREFS, ...JSON.parse(saved) } : DEFAULT_NOTIF_PREFS;
   });
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -322,34 +385,6 @@ export default function App() {
   // Save notif prefs whenever they change
   useEffect(() => {
     localStorage.setItem('xox_notif_prefs', JSON.stringify(notifPrefs));
-  }, [notifPrefs]);
-
-  // Track online/offline status
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      if (notifPrefs.connectionRestored && Notification.permission === 'granted') {
-        showSystemNotification('🌐 İnternet Bağlantısı Geri Geldi', 'Sunucuya bağlanılıyor...');
-      }
-      // Socket yeniden bağlan
-      if (token && token.startsWith('offline_') === false) {
-        // Online user, reconnect
-        window.location.reload();
-      }
-    };
-    const handleOffline = () => {
-      setIsOnline(false);
-      if (notifPrefs.connectionLost && Notification.permission === 'granted') {
-        showSystemNotification('📡 İnternet Bağlantısı Kesildi', 'Çevrimdışı moda geçiyorsunuz...');
-      }
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
   }, [notifPrefs]);
 
   // Request notification permission on mount
@@ -390,6 +425,40 @@ export default function App() {
       addToast('info', title, message);
     }
   }, [notifPrefs, showSystemNotification, addToast]);
+
+  // Track online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      sendNotification('connectionRestored', '🌐 İnternet Bağlantısı Geri Geldi', 'Sunucuya bağlanılıyor...');
+      // Socket yeniden bağlan
+      if (token && token.startsWith('offline_') === false) {
+        // Online user, reconnect
+        window.location.reload();
+      }
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      sendNotification('connectionLost', '📡 İnternet Bağlantısı Kesildi', 'Çevrimdışı moda geçiyorsunuz...');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [token, sendNotification]);
+
+  // ─── Welcome Notification (uygulamaya her girişte bir kez) ────────────────
+  const welcomeShownRef = useRef(false);
+  useEffect(() => {
+    if (user && !welcomeShownRef.current) {
+      welcomeShownRef.current = true;
+      sendNotification('welcome', `👋 Hoş Geldin, ${user.username}!`, 'XOX Arena\'ya tekrar hoş geldin, iyi oyunlar!');
+    }
+  }, [user, sendNotification]);
+
 
   // ─── Effects ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -434,6 +503,12 @@ export default function App() {
 
     s.on('lobby-count-update', (data: Partial<LobbyStats>) => setLobbyStats((p) => ({ ...p, ...data })));
 
+    s.on('receive-message', (msg: { username: string; message: string }) => {
+      if (msg.username && msg.username !== user.username && msg.message) {
+        sendNotification('chatMessage', `💬 ${msg.username}`, msg.message);
+      }
+    });
+
     s.on('match-joined', (data: { roomCode: string; players: PlayerState[]; roundsTotal: number; currentRound: number; gameBoard: string[]; turnUserId: string; status: 'playing' | 'round_ended' | 'finished' }) => {
       cancelMatchmakingInterval();
       setMatchmakingActive(false);
@@ -441,7 +516,12 @@ export default function App() {
       const enemyPlayer = data.players.find((p) => p.userId !== user.userId);
       if (myPlayer && enemyPlayer) {
         setActiveGame({ roomCode: data.roomCode, me: myPlayer, opponent: enemyPlayer, roundsLimit: data.roundsTotal, gameBoard: data.gameBoard, turnUserId: data.turnUserId, status: data.status });
-        sendNotification('matchFound', '⚡ Maç Bulundu!', `Rakibiniz: ${enemyPlayer.username} (${enemyPlayer.elo} ELO)`);
+        if (data.roomCode === privateRoomCodeRef.current) {
+          sendNotification('roomJoined', '👥 Birisi Odana Katıldı!', `${enemyPlayer.username} (${enemyPlayer.elo} ELO) odana girdi, maç başlıyor!`);
+        } else {
+          sendNotification('matchFound', '⚡ Maç Bulundu!', `Rakibiniz: ${enemyPlayer.username} (${enemyPlayer.elo} ELO)`);
+        }
+        setPrivateRoomCode('');
       }
     });
 
@@ -449,6 +529,27 @@ export default function App() {
       cancelMatchmakingInterval();
       setMatchmakingActive(false);
       addToast('warning', 'Rakip Bulunamadı', data.message);
+    });
+
+    s.on('match-finished', (data: { winnerUserId: string | null; winnerName: string; scores: Record<string, number>; eloChanges: Array<{ userId: string; username: string; change: number; oldElo: number; newElo: number }> }) => {
+      const isWinner = data.winnerUserId === user.userId;
+      const isDraw = !data.winnerUserId;
+      sendNotification(
+        'matchEnded',
+        isDraw ? '🤝 Maç Berabere Bitti' : isWinner ? '🏆 Maçı Kazandın!' : '🏁 Maç Sona Erdi',
+        isDraw ? 'Maç berabere sonuçlandı.' : `Kazanan: ${data.winnerName}`
+      );
+
+      const myEloChange = data.eloChanges?.find((c) => c.userId === user.userId);
+      if (myEloChange) {
+        setUser((prev) => (prev ? { ...prev, elo: myEloChange.newElo } : prev));
+        sendNotification(
+          'eloChange',
+          myEloChange.change >= 0 ? `📊 ELO +${myEloChange.change}` : `📊 ELO ${myEloChange.change}`,
+          `Yeni ELO puanın: ${myEloChange.newElo}`
+        );
+      }
+      setLeadRefresh((p) => p + 1);
     });
 
     setSocket(s);
@@ -605,7 +706,7 @@ export default function App() {
     socket.emit('create-custom-room', { rounds: customRounds }, (res: { success: boolean; roomCode: string; rounds: number; error?: string }) => {
       if (res.error) { setCustomRoomError(res.error); return; }
       setPrivateRoomCode(res.roomCode);
-      addToast('success', 'Oda Oluşturuldu! 🎉', `Kod: ${res.roomCode} — Arkadaşına gönder!`);
+      sendNotification('roomCreated', '🚪 Oda Oluşturuldu!', `Kod: ${res.roomCode} — Arkadaşına gönder!`);
     });
   };
 
@@ -662,6 +763,33 @@ export default function App() {
     );
   }
 
+  // ─── RENDER: Offline Two-Player (Same Device) Game ──────────────────────
+  if (offlineTwoPlayerGame) {
+    return (
+      <div className="min-h-screen bg-slate-50 antialiased font-sans">
+        <header className="nav-glass sticky top-0 z-50 py-3.5">
+          <div className="max-w-6xl mx-auto px-4 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <img src="/xox_icon.png" alt="XOX Arena" className="w-8 h-8 rounded-xl object-cover shadow border border-white/60" referrerPolicy="no-referrer" />
+              <span className="font-black text-base text-slate-800 tracking-tight">XOX ARENA</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="bg-slate-100 text-slate-600 text-[10px] font-black px-2 py-1 rounded-full border border-slate-200 flex items-center gap-1">
+                <WifiOff className="w-3 h-3" /> Offline Mod
+              </span>
+            </div>
+          </div>
+        </header>
+        <main className="py-6">
+          <OfflineTwoPlayer
+            rounds={offlineTwoPlayerGame.rounds}
+            onExit={() => setOfflineTwoPlayerGame(null)}
+          />
+        </main>
+      </div>
+    );
+  }
+
   // ─── RENDER: Active Game ────────────────────────────────────────────────
   if (user && activeGame) {
     return (
@@ -704,6 +832,17 @@ export default function App() {
           />
         )}
 
+        {/* Offline Two-Player Rounds Modal */}
+        {offlineTwoPlayerModalOpen && (
+          <OfflineTwoPlayerRoundsModal
+            onSelect={(rounds) => {
+              setOfflineTwoPlayerModalOpen(false);
+              setOfflineTwoPlayerGame({ rounds });
+            }}
+            onClose={() => setOfflineTwoPlayerModalOpen(false)}
+          />
+        )}
+
         {/* Settings Modal */}
         <SettingsModal
           isOpen={showSettingsModal}
@@ -713,10 +852,10 @@ export default function App() {
         />
 
         {/* Navbar */}
-        <header className="nav-glass sticky top-0 z-50 py-3">
-          <div className="max-w-6xl mx-auto px-4 flex items-center justify-between gap-2">
+        <header className="nav-glass sticky top-0 z-50 py-2.5 sm:py-3">
+          <div className="max-w-6xl mx-auto px-2.5 sm:px-4 flex items-center justify-between gap-1 sm:gap-2">
             {/* Logo */}
-            <div className="hidden md:flex items-center gap-2.5 cursor-pointer" onClick={() => setActivePageView('lobby')}>
+            <div className="hidden md:flex items-center gap-2.5 cursor-pointer shrink-0" onClick={() => setActivePageView('lobby')}>
               <div className="relative">
                 <img src="/xox_icon.png" alt="XOX Arena" className="w-9 h-9 rounded-xl object-cover shadow-md border border-white/60" referrerPolicy="no-referrer" />
                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white nav-dot" />
@@ -727,45 +866,48 @@ export default function App() {
               </div>
             </div>
 
+            {/* Mobile logo (icon only) */}
+            <img src="/xox_icon.png" alt="XOX Arena" className="md:hidden w-7 h-7 rounded-lg object-cover shadow-sm border border-white/60 shrink-0 cursor-pointer" referrerPolicy="no-referrer" onClick={() => setActivePageView('lobby')} />
+
             {/* Nav Pills */}
-            <nav className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200/50 gap-0.5">
+            <nav className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200/50 gap-0.5 min-w-0 overflow-x-auto">
               {([
-                { key: 'lobby', label: 'Lobi', icon: <Zap className="w-3 h-3" /> },
-                { key: 'rooms', label: 'Odalar', icon: <DoorOpen className="w-3 h-3" /> },
-                { key: 'leaderboard', label: 'Sıralama', icon: <Trophy className="w-3 h-3" /> },
+                { key: 'lobby', label: 'Lobi', icon: <Zap className="w-3 h-3 shrink-0" /> },
+                { key: 'rooms', label: 'Odalar', icon: <DoorOpen className="w-3 h-3 shrink-0" /> },
+                { key: 'leaderboard', label: 'Sıralama', icon: <Trophy className="w-3 h-3 shrink-0" /> },
               ] as const).map(({ key, label, icon }) => (
                 <button
                   key={key}
                   onClick={() => setActivePageView(key)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold tracking-tight transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-2 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold tracking-tight transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shrink-0 ${
                     activePageView === key ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
-                  {icon}{label}
+                  {icon}<span className="hidden sm:inline">{label}</span>
                 </button>
               ))}
             </nav>
 
             {/* User */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               {!navigator.onLine && (
-                <div className="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold px-2.5 py-1.5 rounded-xl flex items-center gap-1">
+                <div className="hidden sm:flex bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold px-2.5 py-1.5 rounded-xl items-center gap-1 shrink-0">
                   <WifiOff className="w-3 h-3" /> Çevrimdışı
                 </div>
               )}
-              <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-xl px-2.5 py-1.5 shadow-sm">
+              <div className="flex items-center gap-1.5 bg-white border border-slate-100 rounded-xl px-1.5 sm:px-2.5 py-1.5 shadow-sm shrink-0">
                 <img src={user.avatarUrl} alt={user.username} referrerPolicy="no-referrer"
                   onError={(e) => { (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/bottts/svg?seed=${user.username}`; }}
                   className="w-6 h-6 rounded-full object-cover border border-slate-200 shrink-0" />
                 <div className="hidden sm:block text-left leading-none">
-                  <span className="font-bold text-xs text-slate-700 block">{user.username}</span>
+                  <span className="font-bold text-xs text-slate-700 block max-w-[100px] truncate">{user.username}</span>
                   <span className="font-mono text-[9px] font-black text-indigo-500">⭐ {user.elo}</span>
                 </div>
               </div>
-              <button onClick={() => setShowSettingsModal(true)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer" title="Bildirim Ayarları">
+              <button onClick={() => setShowSettingsModal(true)} className="p-1.5 sm:p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer shrink-0" title="Bildirim Ayarları">
                 <Bell className="w-4 h-4" />
               </button>
-              <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all cursor-pointer" title="Çıkış Yap">
+              <button onClick={handleLogout} className="p-1.5 sm:p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all cursor-pointer shrink-0" title="Çıkış Yap">
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
@@ -972,15 +1114,23 @@ export default function App() {
                   </div>
                   <div>
                     <h3 className="font-extrabold text-base text-slate-800 tracking-tight">Offline Oyna</h3>
-                    <p className="text-xs text-slate-400">İnternetsiz yapay zekaya karşı oyna · ELO kazanılmaz</p>
+                    <p className="text-xs text-slate-400">İnternetsiz oyna · ELO kazanılmaz</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setOfflineModalOpen(true)}
-                  className="w-full bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white font-bold py-3.5 rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Bot className="w-4 h-4" /> AI ile Oyna
-                </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setOfflineModalOpen(true)}
+                    className="w-full bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white font-bold py-3.5 rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Bot className="w-4 h-4" /> AI ile Oyna
+                  </button>
+                  <button
+                    onClick={() => setOfflineTwoPlayerModalOpen(true)}
+                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-3.5 rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Users className="w-4 h-4" /> 2 Kişi Oyna
+                  </button>
+                </div>
               </div>
 
               {/* Private Room Card */}
