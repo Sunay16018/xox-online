@@ -1,6 +1,7 @@
 // ─── XOX Arena Service Worker ────────────────────────────────────────────────
 // PWA offline desteği: offline modda AI ile oyun tamamen çalışır,
 // online mod ağ bağlantısı gerektirir (socket.io).
+// İnternet gelince sayfa otomatik yenilenir ve senkronizasyon sağlanır.
 
 const CACHE_NAME = 'xox-arena-v1';
 const OFFLINE_URL = '/offline.html';
@@ -146,6 +147,26 @@ self.addEventListener('push', (event) => {
       body: data.body || '',
       icon: '/xox_icon.png',
       badge: '/xox_icon.png',
+      tag: 'xox-arena-notification',
+      requireInteraction: false,
+    })
+  );
+});
+
+// ─── Notification Click Handler ────────────────────────────────────────────
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Eğer pencere açıksa aktif et, açık değilse yeni aç
+      for (const client of clientList) {
+        if (client.url === '/' && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('/');
+      }
     })
   );
 });
