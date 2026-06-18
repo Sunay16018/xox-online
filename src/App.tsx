@@ -224,6 +224,12 @@ export default function App() {
   useEffect(() => {
     if (!token || !user) { socket?.disconnect(); setSocket(null); return; }
 
+    // Offline modda socket bağlantısını engelle
+    if (!navigator.onLine) {
+      setSocket(null);
+      return;
+    }
+
     const s = io({ auth: { token }, reconnectionDelay: 1000, reconnectionDelayMax: 5000 });
 
     s.on('connect', () => {
@@ -276,7 +282,46 @@ export default function App() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault(); setAuthError(null); setAuthSuccessMsg(null); setAuthLoading(true);
     const avatarToSave = avatarInput.trim() || PRESET_AVATARS[avatarSeedIndex]?.url || '/xox_icon.png';
+    
     try {
+      // Offline check
+      if (!navigator.onLine) {
+        // Offline mode: local storage'a kaydet
+        const offlineUsers = JSON.parse(localStorage.getItem('xox_offline_users') || '{}');
+        if (offlineUsers[usernameInput]) {
+          throw new Error('Bu kullanıcı adı zaten alınmış.');
+        }
+        if (usernameInput.length < 3 || usernameInput.length > 15) {
+          throw new Error('Kullanıcı adı 3 ile 15 karakter arasında olmalıdır.');
+        }
+        
+        const offlineUser = {
+          userId: 'offline_' + Date.now(),
+          username: usernameInput,
+          password: passwordInput, // Gerçek uygulamada hash'lenmeliydi, demo için olduğu gibi
+          avatarUrl: avatarToSave,
+          elo: 1200,
+          totalGames: 0,
+          wins: 0,
+          currentWinStreak: 0,
+          maxWinStreak: 0,
+        };
+        offlineUsers[usernameInput] = offlineUser;
+        localStorage.setItem('xox_offline_users', JSON.stringify(offlineUsers));
+        
+        setAuthSuccessMsg('Hesap oluşturuldu (Çevrimdışı)! Giriş yapılıyor...');
+        setTimeout(() => {
+          localStorage.setItem('xox_jwt_token', 'offline_' + Date.now());
+          localStorage.setItem('xox_offline_user', JSON.stringify(offlineUser));
+          setToken('offline_' + Date.now());
+          setUser(offlineUser);
+          resetAuthForm();
+        }, 1200);
+        setAuthLoading(false);
+        return;
+      }
+      
+      // Online mode: normal server auth
       const r = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: usernameInput, password: passwordInput, avatarUrl: avatarToSave }) });
       const body = await r.json();
       if (!r.ok) throw new Error(body.error || 'Kayıt başarısız.');
@@ -289,6 +334,30 @@ export default function App() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); setAuthError(null); setAuthSuccessMsg(null); setAuthLoading(true);
     try {
+      // Offline check
+      if (!navigator.onLine) {
+        // Offline mode: local storage'dan kontrol et
+        const offlineUsers = JSON.parse(localStorage.getItem('xox_offline_users') || '{}');
+        const user = offlineUsers[usernameInput];
+        
+        if (!user || user.password !== passwordInput) {
+          throw new Error('Hatalı kullanıcı adı veya şifre (Çevrimdışı).');
+        }
+        
+        setAuthSuccessMsg('Giriş başarılı (Çevrimdışı)! Yönlendiriliyorsunuz...');
+        setTimeout(() => {
+          const token = 'offline_' + Date.now();
+          localStorage.setItem('xox_jwt_token', token);
+          localStorage.setItem('xox_offline_user', JSON.stringify(user));
+          setToken(token);
+          setUser(user);
+          resetAuthForm();
+        }, 800);
+        setAuthLoading(false);
+        return;
+      }
+      
+      // Online mode: normal server auth
       const r = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: usernameInput, password: passwordInput }) });
       const body = await r.json();
       if (!r.ok) throw new Error(body.error || 'Hatalı kullanıcı adı veya şifre.');
@@ -467,6 +536,11 @@ export default function App() {
 
             {/* User */}
             <div className="flex items-center gap-2 shrink-0">
+              {!navigator.onLine && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold px-2.5 py-1.5 rounded-xl flex items-center gap-1">
+                  <WifiOff className="w-3 h-3" /> Çevrimdışı
+                </div>
+              )}
               <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-xl px-2.5 py-1.5 shadow-sm">
                 <img src={user.avatarUrl} alt={user.username} referrerPolicy="no-referrer"
                   onError={(e) => { (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/bottts/svg?seed=${user.username}`; }}
@@ -508,6 +582,15 @@ export default function App() {
         {/* ── ROOMS PAGE ── */}
         {activePageView === 'rooms' && (
           <main className="max-w-4xl w-full mx-auto px-4 py-8 flex-1 animate-scaleUp space-y-8">
+            {!navigator.onLine && (
+              <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+                <WifiOff className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-bold text-amber-900 text-sm">İnternet Bağlantısı Yok</h3>
+                  <p className="text-amber-700 text-xs mt-1">Online oyun oynamak için internet bağlantısı gereklidir. Offline modda AI ile oynayabilirsiniz.</p>
+                </div>
+              </div>
+            )}
             {/* Hero */}
             <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 rounded-3xl p-6 md:p-8 text-white relative overflow-hidden border border-indigo-500/30 shadow-xl">
               <div className="relative z-10 space-y-2">
@@ -565,14 +648,18 @@ export default function App() {
                       <p className="text-[10px] text-indigo-400 mt-1">Kopyalayıp arkadaşına gönder!</p>
                     </div>
                   ) : (
-                    <button onClick={handleCreateCustomRoom} className="btn-shine w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm cursor-pointer">Oda Kodu Al</button>
+                    <button onClick={handleCreateCustomRoom} disabled={!navigator.onLine} className="btn-shine w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm cursor-pointer">
+                      {!navigator.onLine ? 'İnternet Gerekli' : 'Oda Kodu Al'}
+                    </button>
                   )}
                 </div>
                 {/* Join */}
                 <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-4">
                   <div><h4 className="font-bold text-xs text-slate-700 uppercase tracking-tight">Koda Göre Katıl</h4></div>
                   <input type="text" value={codeToJoin} onChange={(e) => setCodeToJoin(e.target.value)} placeholder="Oda Kodu (ör: ABC12D)" className="w-full bg-white border border-slate-200 text-xs px-3.5 py-2.5 rounded-xl uppercase font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-colors" />
-                  <button onClick={() => handleJoinCustomRoom()} disabled={!codeToJoin.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm cursor-pointer">Odaya Gir</button>
+                  <button onClick={() => handleJoinCustomRoom()} disabled={!codeToJoin.trim() || !navigator.onLine} className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm cursor-pointer">
+                    {!navigator.onLine ? 'İnternet Gerekli' : 'Odaya Gir'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -582,6 +669,17 @@ export default function App() {
         {/* ── LOBBY PAGE ── */}
         {activePageView === 'lobby' && (
           <main className="max-w-6xl w-full mx-auto px-4 py-8 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-scaleUp">
+
+            {/* Offline Warning */}
+            {!navigator.onLine && (
+              <div className="lg:col-span-12 bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+                <WifiOff className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-bold text-amber-900 text-sm">İnternet Bağlantısı Yok</h3>
+                  <p className="text-amber-700 text-xs mt-1">Eşleşme ve online rakip bulma şu anda çalışmamaktadır. Offline modda AI ile oynayabilir veya internete geri bağlandığınızda tekrar deneyin.</p>
+                </div>
+              </div>
+            )}
 
             {/* Left column — actions */}
             <div className="lg:col-span-12 xl:col-span-7 space-y-6">
@@ -643,8 +741,8 @@ export default function App() {
                         </button>
                       ))}
                     </div>
-                    <button onClick={handleStartMatchmaking} className="btn-shine w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2">
-                      <Sword className="w-4 h-4" /> Hemen Eşleş
+                    <button onClick={handleStartMatchmaking} disabled={!navigator.onLine} className="btn-shine w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2">
+                      <Sword className="w-4 h-4" /> {!navigator.onLine ? 'İnternet Gerekli' : 'Hemen Eşleş'}
                     </button>
                   </div>
                 )}
@@ -791,6 +889,17 @@ export default function App() {
               </button>
             ))}
           </div>
+
+          {/* Offline Mode Info */}
+          {!navigator.onLine && (
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-3 flex items-start gap-3">
+              <div className="text-xl mt-0.5">📱</div>
+              <div>
+                <h4 className="font-bold text-blue-900 text-xs">Çevrimdışı Mod Aktif</h4>
+                <p className="text-blue-700 text-xs mt-1">Verileriniz bu cihazda localStorage'da saklanır. Internet bağlantısı gelince sunucuyla senkronize olmaz.</p>
+              </div>
+            </div>
+          )}
 
           {/* Form */}
           <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} className="space-y-4">
