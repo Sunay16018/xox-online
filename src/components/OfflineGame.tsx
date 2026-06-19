@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Home, RotateCcw, Bot, Cpu, CheckCircle2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export type AIDifficulty = 'easy' | 'normal' | 'hard';
 

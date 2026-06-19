@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Home, RotateCcw, Users, Trophy } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface OfflineTwoPlayerProps {
   rounds: number;
