@@ -105,7 +105,7 @@ const DIFFICULTY_CONFIG = {
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
-export default function OfflineGame({ difficulty, rounds, onExit }: OfflineGameProps) {
+export default function OfflineGame({ difficulty, rounds, onExit, onGameWin, onGameLose }: OfflineGameProps) {
   const [board, setBoard] = useState<string[]>(Array(9).fill(''));
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
   const [winningLine, setWinningLine] = useState<number[] | null>(null);
@@ -130,21 +130,16 @@ export default function OfflineGame({ difficulty, rounds, onExit }: OfflineGameP
     const newPlayerScore = result === 'win' ? playerScore + 1 : playerScore;
     const newAiScore = result === 'lose' ? aiScore + 1 : aiScore;
 
-    if (result === 'win') setPlayerScore(p => p + 1);
-    if (result === 'lose') setAiScore(p => p + 1);
+    if (result === 'win') setPlayerScore(newPlayerScore);
+    if (result === 'lose') setAiScore(newAiScore);
 
     // Check match over
     const maxWins = Math.ceil(rounds / 2);
-    if (newPlayerScore + (result === 'win' ? 0 : 0) >= maxWins ||
-        newAiScore + (result === 'lose' ? 0 : 0) >= maxWins ||
-        currentRound >= rounds) {
-
+    if (newPlayerScore >= maxWins || newAiScore >= maxWins || currentRound >= rounds) {
       setTimeout(() => {
-        const finalP = result === 'win' ? playerScore + 1 : playerScore;
-        const finalA = result === 'lose' ? aiScore + 1 : aiScore;
         setMatchOver(true);
-        if (finalP > finalA) setMatchWinner('player');
-        else if (finalA > finalP) setMatchWinner('ai');
+        if (newPlayerScore > newAiScore) setMatchWinner('player');
+        else if (newAiScore > newPlayerScore) setMatchWinner('ai');
         else setMatchWinner('draw');
       }, 1800);
     }
@@ -216,13 +211,15 @@ export default function OfflineGame({ difficulty, rounds, onExit }: OfflineGameP
   // ─── Next Round ──────────────────────────────────────────────────────────
   const handleNextRound = () => {
     if (currentRound < rounds && !matchOver) {
+      // Read roundResult before clearing it to avoid stale closure
+      const playerStartsNext = roundResult !== 'win';
       setBoard(Array(9).fill(''));
       setWinningLine(null);
       setRoundStatus('playing');
       setRoundResult(null);
       setCurrentRound(p => p + 1);
       // Loser starts next round
-      setIsPlayerTurn(roundResult !== 'win');
+      setIsPlayerTurn(playerStartsNext);
     }
   };
 
