@@ -6,9 +6,59 @@ import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import webpush from 'web-push';
 import { db, getDbStatus } from './src/server/db.js';
 
 dotenv.config();
+
+// ─── Web Push (VAPID) Setup ───────────────────────────────────────────────────
+// VAPID anahtarlarını üretmek için: npx web-push generate-vapid-keys
+// Üretilen anahtarları .env dosyasına VAPID_PUBLIC_KEY ve VAPID_PRIVATE_KEY olarak ekleyin.
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:admin@xoxarena.com';
+
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+  console.log('[Push] Web Push VAPID anahtarları yüklendi.');
+} else {
+  console.warn('[Push] VAPID anahtarları eksik — push bildirimleri devre dışı. .env dosyasına VAPID_PUBLIC_KEY ve VAPID_PRIVATE_KEY ekleyin.');
+}
+
+// userId -> PushSubscription nesnesi (bellek içi; production'da MongoDB'ye taşıyın)
+const pushSubscriptions: Map<string, webpush.PushSubscription> = new Map();
+
+// Push bildirimi gönderme yardımcısı
+async function sendPushToUser(userId: string, payload: {
+  title: string;
+  body: string;
+  icon?: string;
+  badge?: string;
+  tag?: string;
+  data?: Record<string, unknown>;
+}) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  const sub = pushSubscriptions.get(userId);
+  if (!sub) return;
+  try {
+    await webpush.sendNotification(sub, JSON.stringify({
+      title: payload.title,
+      body: payload.body,
+      icon: payload.icon || '/xox_icon.png',
+      badge: payload.badge || '/xox_icon.png',
+      tag: payload.tag || 'xox-arena',
+      data: payload.data || {},
+    }));
+  } catch (err: any) {
+    // 410 Gone = abonelik iptal edilmiş, temizle
+    if (err.statusCode === 410 || err.statusCode === 404) {
+      pushSubscriptions.delete(userId);
+      console.log(`[Push] Geçersiz abonelik silindi: ${userId}`);
+    } else {
+      console.error(`[Push] Bildirim gönderilemedi (userId: ${userId}):`, err.message);
+    }
+  }
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -18,24 +68,6 @@ app.use(express.json());
 
 // Serve public folder (sw.js, etc.)
 app.use(express.static(path.join(process.cwd(), 'public')));
-// robots.txt - SEO için explicit route
-app.get('/robots.txt', (req, res) => {
-  res.type('text/plain');
-  res.send('User-agent: *\nAllow: /\nSitemap: https://xox-io.onrender.com/sitemap.xml');
-});
-// sitemap.xml - SEO için explicit route
-app.get('/sitemap.xml', (req, res) => {
-  res.type('application/xml');
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://xox-io.onrender.com/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-</urlset>`);
-});
-
 
 const JWT_SECRET = process.env.JWT_SECRET || 'xox-super-secret-key-9988';
 
@@ -170,6 +202,38 @@ app.get('/api/status', (req, res) => {
     time: new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }),
   });
 });
+
+// ─── Push Notification API Endpoints ─────────────────────────────────────────
+
+// VAPID public key — frontend bunu alarak subscription oluşturur
+app.get('/api/push/vapid-public-key', (req, res) => {
+  if (!VAPID_PUBLIC_KEY) {
+    res.status(503).json({ error: 'Push bildirimleri bu sunucuda etkin değil.' });
+    return;
+  }
+  res.json({ publicKey: VAPID_PUBLIC_KEY });
+});
+
+// Push aboneliği kaydet (token ile korumalı)
+app.post('/api/push/subscribe', authenticateToken, (req: AuthRequest, res) => {
+  const subscription = req.body.subscription as webpush.PushSubscription;
+  if (!subscription || !subscription.endpoint) {
+    res.status(400).json({ error: 'Geçersiz abonelik nesnesi.' });
+    return;
+  }
+  pushSubscriptions.set(req.user!.userId, subscription);
+  console.log(`[Push] Abonelik kaydedildi: ${req.user!.username}`);
+  res.json({ success: true, message: 'Push bildirimleri aktif edildi.' });
+});
+
+// Push aboneliğini iptal et
+app.post('/api/push/unsubscribe', authenticateToken, (req: AuthRequest, res) => {
+  pushSubscriptions.delete(req.user!.userId);
+  console.log(`[Push] Abonelik iptal edildi: ${req.user!.username}`);
+  res.json({ success: true, message: 'Push bildirimleri devre dışı bırakıldı.' });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Authentication: Register
 app.post('/api/auth/register', async (req, res) => {
@@ -571,6 +635,20 @@ setInterval(() => {
         status: newRoom.status,
       });
 
+      // 🔔 Push: Her iki oyuncuya eşleşme bildirimi gönder
+      sendPushToUser(player1.userId, {
+        title: '🎮 Rakip Bulundu!',
+        body: `${player2.username} ile ${newRoom.roundsTotal} turluk maç başlıyor. Hamle sırası sende!`,
+        tag: 'xox-match-found',
+        data: { url: '/', roomCode },
+      });
+      sendPushToUser(player2.userId, {
+        title: '🎮 Rakip Bulundu!',
+        body: `${player1.username} ile ${newRoom.roundsTotal} turluk maç başlıyor. Hamle sırası rakibinde!`,
+        tag: 'xox-match-found',
+        data: { url: '/', roomCode },
+      });
+
       // Save system chat logs
       db.saveChatMessage('Sistem', 'https://api.dicebear.com/7.x/bottts/svg?seed=system', `${player1.username} ve ${player2.username} eşleşti! ${newRoom.roundsTotal} Tur üzerinden oynayacaklar.`, roomCode);
     }
@@ -793,6 +871,19 @@ io.on('connection', (socket: Socket) => {
     });
 
     db.saveChatMessage('Sistem', 'https://api.dicebear.com/7.x/bottts/svg?seed=system', `${user.username} odaya katıldı! XOX Meydan Okuması Başlıyor.`, targetCode);
+
+    // 🔔 Push: Oda sahibine rakip katıldı bildirimi gönder
+    const roomHost = room.players[0];
+    const hostSocket = io.sockets.sockets.get(roomHost.socketId);
+    const isHostConnected = hostSocket && hostSocket.connected;
+    if (!isHostConnected) {
+      sendPushToUser(roomHost.userId, {
+        title: '🎯 Rakip Odana Katıldı!',
+        body: `${user.username} özel odana katıldı. Oyun başlıyor!`,
+        tag: 'xox-room-joined',
+        data: { url: '/', roomCode: targetCode },
+      });
+    }
   });
 
   // Gameplay move handle
@@ -835,6 +926,21 @@ io.on('connection', (socket: Socket) => {
       gameBoard: room.gameBoard,
       turnUserId: room.turnUserId,
     });
+
+    // 🔔 Push: Sıra değişince rakibe "sıran geldi" bildirimi gönder
+    if (otherPlayer) {
+      // Rakip socket'i bağlıysa push gönderme (tarayıcıda açık, gereksiz)
+      const otherSocket = io.sockets.sockets.get(otherPlayer.socketId);
+      const isOtherConnected = otherSocket && otherSocket.connected;
+      if (!isOtherConnected) {
+        sendPushToUser(otherPlayer.userId, {
+          title: '⚡ Sıra Sende!',
+          body: `${user.username} hamlesini yaptı. XOX Arena'ya dön ve oyna!`,
+          tag: 'xox-your-turn',
+          data: { url: '/', roomCode: room.roomCode },
+        });
+      }
+    }
 
     // Check round win / draw logic
     const verdict = checkTicTacToeWin(room.gameBoard);
@@ -1193,6 +1299,41 @@ async function handleGameEndEloAndStats(room: GameRoom) {
       scores: scoresObj,
       eloChanges: eloChangesLog,
     });
+
+    // 🔔 Push: Maç sonu bildirimleri
+    const isDrawResult = !room.winnerUserId;
+    for (const player of [p1, p2]) {
+      const eloEntry = eloChangesLog.find(e => e.userId === player.userId);
+      const eloChange = eloEntry ? eloEntry.change : 0;
+      const eloStr = eloChange >= 0 ? `+${eloChange}` : `${eloChange}`;
+      const isWinner = room.winnerUserId === player.userId;
+      const myScore = scoresObj[player.username] ?? 0;
+      const oppPlayer = [p1, p2].find(p => p.userId !== player.userId);
+      const oppScore = oppPlayer ? (scoresObj[oppPlayer.username] ?? 0) : 0;
+
+      if (isDrawResult) {
+        sendPushToUser(player.userId, {
+          title: '🤝 Beraberlik!',
+          body: `${myScore}-${oppScore} berabere bitti. ELO: ${eloStr}`,
+          tag: 'xox-match-end',
+          data: { url: '/' },
+        });
+      } else if (isWinner) {
+        sendPushToUser(player.userId, {
+          title: '🏆 Kazandın!',
+          body: `${myScore}-${oppScore} galip geldin! ELO: ${eloStr}`,
+          tag: 'xox-match-end',
+          data: { url: '/' },
+        });
+      } else {
+        sendPushToUser(player.userId, {
+          title: '😔 Kaybettin',
+          body: `${myScore}-${oppScore} mağlup oldun. ELO: ${eloStr}. Rövanş al!`,
+          tag: 'xox-match-end',
+          data: { url: '/' },
+        });
+      }
+    }
 
     db.saveChatMessage(
       'Sistem',

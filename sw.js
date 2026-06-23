@@ -1,12 +1,9 @@
 // ─── XOX Arena Service Worker ────────────────────────────────────────────────
-// PWA offline desteği: offline modda AI ile oyun tamamen çalışır,
-// online mod ağ bağlantısı gerektirir (socket.io).
-// İnternet gelince sayfa otomatik yenilenir ve senkronizasyon sağlanır.
+// PWA offline desteği + Web Push Bildirimleri
 
-const CACHE_NAME = 'xox-arena-v1';
+const CACHE_NAME = 'xox-arena-v2';
 const OFFLINE_URL = '/offline.html';
 
-// Önbelleklenmesi gereken statik dosyalar (build sonrası Vite hash'li dosyalar dahil)
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -20,11 +17,9 @@ const PRECACHE_URLS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      // Her URL'yi tek tek dene, hata olanları atla
       const results = await Promise.allSettled(
         PRECACHE_URLS.map((url) =>
           cache.add(url).catch(() => {
-            // Dosya henüz yoksa (ör. /xox_pro.png) sessizce geç
             console.warn('[SW] Önbelleklenemedi:', url);
           })
         )
@@ -32,7 +27,6 @@ self.addEventListener('install', (event) => {
       return results;
     })
   );
-  // Yeni SW hemen aktif olsun
   self.skipWaiting();
 });
 
@@ -50,7 +44,6 @@ self.addEventListener('activate', (event) => {
       )
     )
   );
-  // Açık sekmeleri hemen ele geçir
   self.clients.claim();
 });
 
@@ -59,25 +52,20 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // ── Socket.IO / API isteklerini SW'ye dahil etme ──────────────────────────
-  // Bu istekler ağ gerektiriyor; SW'nin araya girmesi sadece sorun yaratır.
   if (
     url.pathname.startsWith('/socket.io') ||
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/auth/')
   ) {
-    return; // Tarayıcıya bırak
+    return;
   }
 
-  // ── Chrome extension ve diğer protokolleri atla ───────────────────────────
   if (!url.protocol.startsWith('http')) return;
 
-  // ── Navigasyon istekleri (sayfa yükleme) ──────────────────────────────────
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Başarılıysa önbelleğe de yaz
           if (response && response.status === 200) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
@@ -85,10 +73,8 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(async () => {
-          // Çevrimdışı: önbellekte varsa oradan sun
           const cached = await caches.match(request);
           if (cached) return cached;
-          // Yoksa offline sayfasını göster
           const offlinePage = await caches.match(OFFLINE_URL);
           return offlinePage || new Response('Çevrimdışısınız', { status: 503 });
         })
@@ -96,8 +82,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ── Statik varlıklar: Cache-first ─────────────────────────────────────────
-  // JS/CSS/PNG/SVG — önce önbellekten sun, arka planda güncelle
   if (
     request.destination === 'script' ||
     request.destination === 'style' ||
@@ -116,15 +100,12 @@ self.addEventListener('fetch', (event) => {
             return response;
           })
           .catch(() => null);
-
-        // Önbellekte varsa hemen sun, arka planda güncelle (stale-while-revalidate)
         return cached || fetchPromise;
       })
     );
     return;
   }
 
-  // ── Diğer istekler: Network-first ─────────────────────────────────────────
   event.respondWith(
     fetch(request)
       .then((response) => {
@@ -138,34 +119,54 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// ─── Push Bildirimleri (opsiyonel, ileride kullanılabilir) ───────────────────
+// ─── Push Bildirimleri ───────────────────────────────────────────────────────
 self.addEventListener('push', (event) => {
   if (!event.data) return;
-  const data = event.data.json();
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'XOX Arena', {
-      body: data.body || '',
-      icon: '/xox_icon.png',
-      badge: '/xox_icon.png',
-      tag: 'xox-arena-notification',
-      requireInteraction: false,
-    })
-  );
+
+  let data = {};
+  try {
+    data = event.data.json();
+  } catch {
+    data = { title: 'XOX Arena', body: event.data.text() };
+  }
+
+  const title = data.title || 'XOX Arena';
+  const options = {
+    body: data.body || '',
+    icon: data.icon || '/xox_icon.png',
+    badge: data.badge || '/xox_icon.png',
+    tag: data.tag || 'xox-arena-notification',
+    requireInteraction: false,
+    vibrate: [200, 100, 200],
+    data: data.data || {},
+    actions: data.actions || [],
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 // ─── Notification Click Handler ────────────────────────────────────────────
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+
+  // Bildirim data'sından hedef URL al
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Eğer pencere açıksa aktif et, açık değilse yeni aç
+      // Açık pencere varsa focus et ve URL'ye yönlendir
       for (const client of clientList) {
-        if (client.url === '/' && 'focus' in client) {
-          return client.focus();
+        if ('focus' in client) {
+          client.focus();
+          if ('navigate' in client) {
+            client.navigate(targetUrl);
+          }
+          return;
         }
       }
+      // Açık pencere yoksa yeni aç
       if (clients.openWindow) {
-        return clients.openWindow('/');
+        return clients.openWindow(targetUrl);
       }
     })
   );
