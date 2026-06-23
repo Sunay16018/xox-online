@@ -28,6 +28,15 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
 // userId -> PushSubscription nesnesi (bellek içi; production'da MongoDB'ye taşıyın)
 const pushSubscriptions: Map<string, webpush.PushSubscription> = new Map();
 
+// userId -> kullanıcının kapattığı bildirim türleri (bellek içi)
+// Frontend'deki NotificationPrefs ile aynı key isimlerini kullanır.
+const pushPrefsDisabled: Map<string, Set<string>> = new Map();
+
+function isPushTypeEnabled(userId: string, notifType: string): boolean {
+  const disabled = pushPrefsDisabled.get(userId);
+  return !disabled || !disabled.has(notifType);
+}
+
 // Push bildirimi gönderme yardımcısı
 async function sendPushToUser(userId: string, payload: {
   title: string;
@@ -36,16 +45,18 @@ async function sendPushToUser(userId: string, payload: {
   badge?: string;
   tag?: string;
   data?: Record<string, unknown>;
+  notifType?: string;
 }) {
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  if (payload.notifType && !isPushTypeEnabled(userId, payload.notifType)) return;
   const sub = pushSubscriptions.get(userId);
   if (!sub) return;
   try {
     await webpush.sendNotification(sub, JSON.stringify({
       title: payload.title,
       body: payload.body,
-      icon: payload.icon || '/xox_icon.png',
-      badge: payload.badge || '/xox_icon.png',
+      icon: payload.icon || '/assets/images/xox-icon.png',
+      badge: payload.badge || '/assets/images/xox-icon.png',
       tag: payload.tag || 'xox-arena',
       data: payload.data || {},
     }));
@@ -68,6 +79,7 @@ app.use(express.json());
 
 // Serve public folder (sw.js, etc.)
 app.use(express.static(path.join(process.cwd(), 'public')));
+app.use('/assets', express.static(path.join(process.cwd(), 'assets')));
 
 const JWT_SECRET = process.env.JWT_SECRET || 'xox-super-secret-key-9988';
 
@@ -111,87 +123,20 @@ function authenticateToken(req: AuthRequest, res: express.Response, next: expres
 // Express REST API Routes
 // ----------------------------------------------------
 
-// PWA Manifest & App Icon
-app.get('/manifest.json', (req, res) => {
-  res.json({
-    name: "XOX Arena - Online Multiplayer",
-    short_name: "XOX Arena",
-    description: "Gerçek zamanlı çevrimiçi XOX oyunu. ELO puanlama, lobi sohbeti ve özel oda desteği.",
-    start_url: "/",
-    scope: "/",
-    display: "standalone",
-    display_override: ["window-controls-overlay", "standalone", "browser"],
-    background_color: "#0f172a",
-    theme_color: "#4f46e5",
-    orientation: "portrait-primary",
-    lang: "tr",
-    categories: ["games", "entertainment"],
-    screenshots: [],
-    icons: [
-      {
-        src: "/xox_pro.png",
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "any"
-      },
-      {
-        src: "/xox_pro.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any"
-      },
-      {
-        src: "/xox_pro.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "maskable"
-      }
-    ],
-    shortcuts: [
-      {
-        name: "Hızlı Eşleşme",
-        short_name: "Eşleş",
-        description: "Hemen rakip bul ve oyna",
-        url: "/?action=matchmaking",
-        icons: [{ src: "/xox_pro.png", sizes: "96x96" }]
-      },
-      {
-        name: "Liderlik Tablosu",
-        short_name: "Sıralama",
-        description: "En iyi oyuncuları gör",
-        url: "/?page=leaderboard",
-        icons: [{ src: "/xox_pro.png", sizes: "96x96" }]
-      }
-    ]
+app.get('/assets/images/xox-icon.png', (req, res) => {
+  const iconPath = path.join(process.cwd(), 'assets/images/xox-icon.png');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(iconPath, (err) => {
+    if (err) res.status(404).end();
   });
 });
 
-app.get('/xox_pro.png', (req, res) => {
-  // Try new PNG first, fall back to old JPG
-  const pngPath = path.join(process.cwd(), 'assets/images/xox_pro.png');
-  const jpgPath = path.join(process.cwd(), 'assets/images/xox_icon_clean_round_1781433620627.jpg');
-  const fs = require('fs');
-  if (fs.existsSync(pngPath)) {
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    res.sendFile(pngPath);
-  } else {
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    res.sendFile(jpgPath);
-  }
-});
-
-app.get('/xox_icon.png', (req, res) => {
-  // Try new PNG first, fall back to old JPG
-  const pngPath = path.join(process.cwd(), 'assets/images/xox_icon.png');
-  const jpgPath = path.join(process.cwd(), 'assets/images/xox_icon_clean_round_1781433620627.jpg');
-  const fs = require('fs');
-  if (fs.existsSync(pngPath)) {
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    res.sendFile(pngPath);
-  } else {
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    res.sendFile(jpgPath);
-  }
+app.get('/assets/images/xox_pro.png', (req, res) => {
+  const iconPath = path.join(process.cwd(), 'assets/images/xox_pro.png');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(iconPath, (err) => {
+    if (err) res.status(404).end();
+  });
 });
 
 // System Status Endpoint
@@ -231,6 +176,22 @@ app.post('/api/push/unsubscribe', authenticateToken, (req: AuthRequest, res) => 
   pushSubscriptions.delete(req.user!.userId);
   console.log(`[Push] Abonelik iptal edildi: ${req.user!.username}`);
   res.json({ success: true, message: 'Push bildirimleri devre dışı bırakıldı.' });
+});
+
+// Bildirim tercihlerini senkronize et — kullanıcı ayarlardan bir türü kapatırsa
+// server artık o tür için push GÖNDERMEZ (cihaz kapalı/arka planda olsa bile).
+app.post('/api/push/prefs', authenticateToken, (req: AuthRequest, res) => {
+  const prefs = req.body.prefs as Record<string, boolean> | undefined;
+  if (!prefs || typeof prefs !== 'object') {
+    res.status(400).json({ error: 'Geçersiz tercih nesnesi.' });
+    return;
+  }
+  const disabled = new Set<string>();
+  for (const [key, enabled] of Object.entries(prefs)) {
+    if (!enabled) disabled.add(key);
+  }
+  pushPrefsDisabled.set(req.user!.userId, disabled);
+  res.json({ success: true });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -641,12 +602,14 @@ setInterval(() => {
         body: `${player2.username} ile ${newRoom.roundsTotal} turluk maç başlıyor. Hamle sırası sende!`,
         tag: 'xox-match-found',
         data: { url: '/', roomCode },
+        notifType: 'matchFound',
       });
       sendPushToUser(player2.userId, {
         title: '🎮 Rakip Bulundu!',
         body: `${player1.username} ile ${newRoom.roundsTotal} turluk maç başlıyor. Hamle sırası rakibinde!`,
         tag: 'xox-match-found',
         data: { url: '/', roomCode },
+        notifType: 'matchFound',
       });
 
       // Save system chat logs
@@ -882,6 +845,7 @@ io.on('connection', (socket: Socket) => {
         body: `${user.username} özel odana katıldı. Oyun başlıyor!`,
         tag: 'xox-room-joined',
         data: { url: '/', roomCode: targetCode },
+        notifType: 'roomJoined',
       });
     }
   });
@@ -938,6 +902,7 @@ io.on('connection', (socket: Socket) => {
           body: `${user.username} hamlesini yaptı. XOX Arena'ya dön ve oyna!`,
           tag: 'xox-your-turn',
           data: { url: '/', roomCode: room.roomCode },
+          notifType: 'matchFound',
         });
       }
     }
@@ -1317,6 +1282,7 @@ async function handleGameEndEloAndStats(room: GameRoom) {
           body: `${myScore}-${oppScore} berabere bitti. ELO: ${eloStr}`,
           tag: 'xox-match-end',
           data: { url: '/' },
+          notifType: 'matchEnded',
         });
       } else if (isWinner) {
         sendPushToUser(player.userId, {
@@ -1324,6 +1290,7 @@ async function handleGameEndEloAndStats(room: GameRoom) {
           body: `${myScore}-${oppScore} galip geldin! ELO: ${eloStr}`,
           tag: 'xox-match-end',
           data: { url: '/' },
+          notifType: 'matchEnded',
         });
       } else {
         sendPushToUser(player.userId, {
@@ -1331,6 +1298,7 @@ async function handleGameEndEloAndStats(room: GameRoom) {
           body: `${myScore}-${oppScore} mağlup oldun. ELO: ${eloStr}. Rövanş al!`,
           tag: 'xox-match-end',
           data: { url: '/' },
+          notifType: 'matchEnded',
         });
       }
     }
