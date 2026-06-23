@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import {
   Trophy, MessageSquare, LogOut, Zap, Sword, PlusCircle,
   LogIn, Dribbble, CheckCircle2, Hourglass, AlertCircle,
-  DoorOpen, Sparkles, X, Users, Bot, WifiOff, Bell, Settings
+  DoorOpen, Sparkles, X, Users, Bot, WifiOff, Bell, Settings, ShieldAlert
 } from 'lucide-react';
 import { UserInfo, PlayerState, LobbyStats } from './types';
 import Leaderboard from './components/Leaderboard';
@@ -441,15 +441,30 @@ export default function App() {
 
   // ─── Notification Helper ──────────────────────────────────────────────────
   const showSystemNotification = useCallback((title: string, options?: NotificationOptions) => {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      try {
-        new Notification(title, {
-          icon: '/xox_icon.png',
-          badge: '/xox_icon.png',
-          tag: 'xox-arena-notification',
-          requireInteraction: false,
-          ...options,
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+    const notifOptions: NotificationOptions = {
+      icon: '/xox_icon.png',
+      badge: '/xox_icon.png',
+      tag: 'xox-arena-notification',
+      requireInteraction: false,
+      ...options,
+    };
+
+    // Mobil (Android) için Service Worker üzerinden showNotification zorunludur.
+    // new Notification() mobil tarayıcılarda sessizce bloklanır veya hata fırlatır.
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready
+        .then((registration) => {
+          registration.showNotification(title, notifOptions);
+        })
+        .catch(() => {
+          try { new Notification(title, notifOptions); } catch (e) { console.warn('Notification gösterilemedi:', e); }
         });
+    } else {
+      // SW henüz aktif değilse (masaüstü eski tarayıcı) direkt Notification
+      try {
+        new Notification(title, notifOptions);
       } catch (e) {
         console.warn('Notification gösterilemedi:', e);
       }
