@@ -8,8 +8,8 @@ const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/xox_icon.png',
-  '/xox_pro.png',
+  '/assets/images/xox-icon.png',
+  '/assets/images/xox_pro.png',
   '/offline.html',
 ];
 
@@ -130,11 +130,11 @@ self.addEventListener('push', (event) => {
     data = { title: 'XOX Arena', body: event.data.text() };
   }
 
-  const title = '';
+  const title = data.title || 'XOX Arena';
   const options = {
     body: data.body || '',
-    icon: data.icon || '/xox_icon.png',
-    badge: data.badge || '/xox_icon.png',
+    icon: data.icon || '/assets/images/xox-icon.png',
+    badge: data.badge || '/assets/images/xox-icon.png',
     tag: data.tag || 'xox-arena-notification',
     requireInteraction: false,
     vibrate: [200, 100, 200],

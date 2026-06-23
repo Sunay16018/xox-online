@@ -11,21 +11,27 @@
   "scope": "/",
   "icons": [
     {
-      "src": "/xox_icon.png",
+      "src": "/assets/images/xox-icon.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/xox_icon.png",
+      "src": "/assets/images/xox_pro.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/xox_pro.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "screenshots": [
     {
-      "src": "/xox_pro.png",
+      "src": "/assets/images/xox_pro.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow"
