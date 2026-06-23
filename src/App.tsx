@@ -454,7 +454,6 @@ export default function App() {
 
     const notifOptions: NotificationOptions = {
       icon: '/assets/images/xox-icon.png',
-      badge: '/assets/images/xox-icon.png',
       tag: 'xox-arena-notification',
       requireInteraction: false,
       ...options,
