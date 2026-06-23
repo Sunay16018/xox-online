@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, ShieldAlert, Zap, CornerDownLeft, VolumeX, MessageSquare, ListCollapse, Home, Trophy, Trash2 } from 'lucide-react';
+import { ShieldAlert, Zap, CornerDownLeft, MessageSquare, Home, Trophy } from 'lucide-react';
 import { PlayerState, EloChange } from '../types';
 import LobbyChat from './LobbyChat';
 import { Socket } from 'socket.io-client';

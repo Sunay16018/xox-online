@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Home, RotateCcw, Users, Trophy } from 'lucide-react';
+import { Home, RotateCcw, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface OfflineTwoPlayerProps {
@@ -45,20 +45,19 @@ export default function OfflineTwoPlayer({ rounds, onExit }: OfflineTwoPlayerPro
     setRoundStatus('ended');
     setRoundResult(result);
 
+    // Yerel değişkenleri state setter yerine kullan - race condition'ı önler
     const newXScore = result === 'X' ? xScore + 1 : xScore;
     const newOScore = result === 'O' ? oScore + 1 : oScore;
 
-    if (result === 'X') setXScore(p => p + 1);
-    if (result === 'O') setOScore(p => p + 1);
+    setXScore(newXScore);
+    setOScore(newOScore);
 
     const maxWins = Math.ceil(rounds / 2);
     if (newXScore >= maxWins || newOScore >= maxWins || currentRound >= rounds) {
       setTimeout(() => {
-        const finalX = result === 'X' ? xScore + 1 : xScore;
-        const finalO = result === 'O' ? oScore + 1 : oScore;
         setMatchOver(true);
-        if (finalX > finalO) setMatchWinner('X');
-        else if (finalO > finalX) setMatchWinner('O');
+        if (newXScore > newOScore) setMatchWinner('X');
+        else if (newOScore > newXScore) setMatchWinner('O');
         else setMatchWinner('draw');
       }, 1800);
     }
