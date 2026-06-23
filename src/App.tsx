@@ -86,7 +86,7 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
 
 // ─── Avatar presets ──────────────────────────────────────────────────────────
 const PRESET_AVATARS = [
-  { name: 'XOX Premium', url: '/xox_pro.png' },
+  { name: 'XOX Premium', url: '/assets/images/xox-icon.png' },
   { name: 'Oscar', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Oscar' },
   { name: 'Charlie', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Charlie' },
   { name: 'Buster', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Buster' },
@@ -422,7 +422,16 @@ export default function App() {
   // Save notif prefs whenever they change
   useEffect(() => {
     localStorage.setItem('xox_notif_prefs', JSON.stringify(notifPrefs));
-  }, [notifPrefs]);
+    // Sunucudaki push gönderimini de senkronize et — kapatılan bir tür için
+    // arka planda/cihaz kapalıyken artık push bildirimi gönderilmesin.
+    if (token && !token.startsWith('offline_')) {
+      fetch('/api/push/prefs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ prefs: notifPrefs }),
+      }).catch(() => {});
+    }
+  }, [notifPrefs, token]);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -444,8 +453,8 @@ export default function App() {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
     const notifOptions: NotificationOptions = {
-      icon: '/xox_icon.png',
-      badge: '/xox_icon.png',
+      icon: '/assets/images/xox-icon.png',
+      badge: '/assets/images/xox-icon.png',
       tag: 'xox-arena-notification',
       requireInteraction: false,
       ...options,
@@ -631,7 +640,7 @@ export default function App() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault(); setAuthError(null); setAuthSuccessMsg(null); setAuthLoading(true);
-    const avatarToSave = avatarInput.trim() || PRESET_AVATARS[avatarSeedIndex]?.url || '/xox_icon.png';
+    const avatarToSave = avatarInput.trim() || PRESET_AVATARS[avatarSeedIndex]?.url || '/assets/images/xox-icon.png';
     
     try {
       // Offline check
@@ -792,7 +801,7 @@ export default function App() {
         <header className="nav-glass sticky top-0 z-50 py-3.5">
           <div className="max-w-6xl mx-auto px-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <img src="/xox_icon.png" alt="XOX Arena" className="w-8 h-8 rounded-xl object-cover shadow border border-white/60" referrerPolicy="no-referrer" />
+              <img src="/assets/images/xox-icon.png" alt="XOX Arena" className="w-8 h-8 rounded-xl object-cover shadow border border-white/60" referrerPolicy="no-referrer" />
               <span className="font-black text-base text-slate-800 tracking-tight">XOX ARENA</span>
             </div>
             <div className="flex items-center gap-2">
@@ -822,7 +831,7 @@ export default function App() {
         <header className="nav-glass sticky top-0 z-50 py-3.5">
           <div className="max-w-6xl mx-auto px-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <img src="/xox_icon.png" alt="XOX Arena" className="w-8 h-8 rounded-xl object-cover shadow border border-white/60" referrerPolicy="no-referrer" />
+              <img src="/assets/images/xox-icon.png" alt="XOX Arena" className="w-8 h-8 rounded-xl object-cover shadow border border-white/60" referrerPolicy="no-referrer" />
               <span className="font-black text-base text-slate-800 tracking-tight">XOX ARENA</span>
             </div>
             <div className="flex items-center gap-2">
@@ -850,7 +859,7 @@ export default function App() {
         <header className="nav-glass sticky top-0 z-50 py-3.5">
           <div className="max-w-6xl mx-auto px-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <img src="/xox_icon.png" alt="XOX Arena" className="w-8 h-8 rounded-xl object-cover shadow border border-white/60" referrerPolicy="no-referrer" />
+              <img src="/assets/images/xox-icon.png" alt="XOX Arena" className="w-8 h-8 rounded-xl object-cover shadow border border-white/60" referrerPolicy="no-referrer" />
               <span className="font-black text-base text-slate-800 tracking-tight">XOX ARENA</span>
             </div>
             <div className="flex items-center gap-2">
@@ -911,7 +920,7 @@ export default function App() {
             {/* Logo */}
             <div className="hidden md:flex items-center gap-2.5 cursor-pointer shrink-0" onClick={() => setActivePageView('lobby')}>
               <div className="relative">
-                <img src="/xox_icon.png" alt="XOX Arena" className="w-9 h-9 rounded-xl object-cover shadow-md border border-white/60" referrerPolicy="no-referrer" />
+                <img src="/assets/images/xox-icon.png" alt="XOX Arena" className="w-9 h-9 rounded-xl object-cover shadow-md border border-white/60" referrerPolicy="no-referrer" />
                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white nav-dot" />
               </div>
               <div>
@@ -921,7 +930,7 @@ export default function App() {
             </div>
 
             {/* Mobile logo (icon only) */}
-            <img src="/xox_icon.png" alt="XOX Arena" className="md:hidden w-7 h-7 rounded-lg object-cover shadow-sm border border-white/60 shrink-0 cursor-pointer" referrerPolicy="no-referrer" onClick={() => setActivePageView('lobby')} />
+            <img src="/assets/images/xox-icon.png" alt="XOX Arena" className="md:hidden w-7 h-7 rounded-lg object-cover shadow-sm border border-white/60 shrink-0 cursor-pointer" referrerPolicy="no-referrer" onClick={() => setActivePageView('lobby')} />
 
             {/* Nav Pills */}
             <nav className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200/50 gap-0.5 min-w-0 overflow-x-auto">
@@ -1279,7 +1288,7 @@ export default function App() {
           <div className="text-center space-y-3">
             <div className="relative inline-block">
               <div className="absolute inset-0 bg-indigo-500/20 rounded-3xl blur-xl" />
-              <img src="/xox_icon.png" alt="XOX Arena" className="relative w-16 h-16 rounded-2xl object-cover shadow-xl border border-white/80 mx-auto" referrerPolicy="no-referrer" />
+              <img src="/assets/images/xox-icon.png" alt="XOX Arena" className="relative w-16 h-16 rounded-2xl object-cover shadow-xl border border-white/80 mx-auto" referrerPolicy="no-referrer" />
             </div>
             <div>
               <h1 className="font-black text-2xl text-slate-900 tracking-tight">XOX ARENA</h1>
