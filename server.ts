@@ -56,7 +56,6 @@ async function sendPushToUser(userId: string, payload: {
       title: payload.title,
       body: payload.body,
       icon: payload.icon || '/assets/images/xox-icon.png',
-      badge: payload.badge || '/assets/images/xox-icon.png',
       tag: payload.tag || 'xox-arena',
       data: payload.data || {},
     }));
