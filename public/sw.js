@@ -130,7 +130,7 @@ self.addEventListener('push', (event) => {
     data = { title: 'XOX Arena', body: event.data.text() };
   }
 
-  const title = data.title || 'XOX Arena';
+  const title = '';
   const options = {
     body: data.body || '',
     icon: data.icon || '/xox_icon.png',
