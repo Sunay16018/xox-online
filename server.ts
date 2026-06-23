@@ -130,7 +130,7 @@ app.get('/assets/images/xox-icon.png', (req, res) => {
   });
 });
 
-app.get('/assets/images/xox_pro.png', (req, res) => {
+app.get('xox_pro.png', (req, res) => {
   const iconPath = path.join(process.cwd(), 'assets/images/xox_pro.png');
   res.setHeader('Cache-Control', 'public, max-age=86400');
   res.sendFile(iconPath, (err) => {
