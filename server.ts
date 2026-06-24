@@ -139,6 +139,14 @@ app.get('/assets/images/xox_pro.png', (req, res) => {
   });
 });
 
+app.get('/assets/images/icon-badge.png', (req, res) => {
+  const iconPath = path.join(process.cwd(), 'assets/images/icon-badge.png');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(iconPath, (err) => {
+    if (err) res.status(404).end();
+  });
+});
+
 // System Status Endpoint
 app.get('/api/status', (req, res) => {
   res.json({
