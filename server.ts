@@ -56,6 +56,7 @@ async function sendPushToUser(userId: string, payload: {
       title: payload.title,
       body: payload.body,
       icon: payload.icon || '/assets/images/xox-icon.png',
+      badge: payload.badge || '/assets/images/icon-badge.png',
       tag: payload.tag || 'xox-arena',
       data: payload.data || {},
     }));
@@ -130,7 +131,7 @@ app.get('/assets/images/xox-icon.png', (req, res) => {
   });
 });
 
-app.get('xox_pro.png', (req, res) => {
+app.get('/assets/images/xox_pro.png', (req, res) => {
   const iconPath = path.join(process.cwd(), 'assets/images/xox_pro.png');
   res.setHeader('Cache-Control', 'public, max-age=86400');
   res.sendFile(iconPath, (err) => {

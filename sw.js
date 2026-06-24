@@ -9,6 +9,7 @@ const PRECACHE_URLS = [
   '/index.html',
   '/manifest.json',
   '/assets/images/xox-icon.png',
+  '/assets/images/icon-badge.png',
   '/assets/images/xox_pro.png',
   '/offline.html',
 ];
@@ -134,6 +135,7 @@ self.addEventListener('push', (event) => {
   const options = {
     body: data.body || '',
     icon: data.icon || '/assets/images/xox-icon.png',
+    badge: data.badge || '/assets/images/icon-badge.png',
     tag: data.tag || 'xox-arena-notification',
     requireInteraction: false,
     vibrate: [200, 100, 200],
